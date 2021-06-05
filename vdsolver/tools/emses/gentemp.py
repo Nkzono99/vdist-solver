@@ -17,7 +17,7 @@ def gentemp():
     c1, c2 = chars
     C1, C2 = c1.upper(), c2.upper()
 
-    filepath = Path(__file__).parent.parent.parent.parent / \
+    filepath = Path(__file__).parent.parent.parent / \
         'templates/vdist-solver.py.tmp'
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()

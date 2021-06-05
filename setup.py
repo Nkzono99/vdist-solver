@@ -12,7 +12,7 @@ setup(
     description='Velocity distribution function solver using Liouville\'s theorem',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version='0.1.0',
+    version='0.1.1',
     install_requires=_require_packages('requirements.txt'),
     author='Nkzono99',
     author_email='210x218x@gsuite.stu.kobe-u.ac.jp',
@@ -28,5 +28,6 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.7'
+    python_requires='>=3.7',
+    include_package_data=True,
 )
