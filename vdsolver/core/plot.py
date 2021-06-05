@@ -1,5 +1,5 @@
 from typing import List
-from vdsolver.base import Particle
+from .base import Particle
 import matplotlib.pyplot as plt
 
 
