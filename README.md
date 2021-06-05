@@ -10,7 +10,7 @@ Velocity distribution function solver using Liouville's theorem
 
 ## Installation
 ```
-pip install git+https://github.com/Nkzono99/.git
+pip install git+https://github.com/Nkzono99/vdist-solver.git
 ```
 
 ## Usage
