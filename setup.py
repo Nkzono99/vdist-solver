@@ -18,6 +18,11 @@ setup(
     author_email='210x218x@gsuite.stu.kobe-u.ac.jp',
     url='https://github.com/Nkzono99/vdist-solver',
     packages=find_packages(),
+    entry_points={
+        'console_scripts': [
+            'gen-vsolver = vdsolver.tools.emses.gentemp:gentemp',
+        ]
+    },
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
