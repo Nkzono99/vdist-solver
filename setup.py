@@ -1,0 +1,27 @@
+from setuptools import find_packages, setup
+
+
+def _require_packages(filename):
+    return open(filename).read().splitlines()
+
+
+long_description = open('README.md', 'r', encoding='utf-8').read()
+
+setup(
+    name='vdist-solver',
+    description='Velocity distribution function solver using Liouville\'s theorem',
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    version='0.1.0',
+    install_requires=_require_packages('requirements.txt'),
+    author='Nkzono99',
+    author_email='210x218x@gsuite.stu.kobe-u.ac.jp',
+    url='https://github.com/Nkzono99/vdist-solver',
+    packages=find_packages(),
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: MIT License",
+        "Operating System :: OS Independent",
+    ],
+    python_requires='>=3.7'
+)
