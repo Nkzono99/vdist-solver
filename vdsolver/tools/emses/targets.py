@@ -133,7 +133,7 @@ class BackTraceTraget(Target):
         dt = self.data.inp.dt * self.dt
         q_m = self.data.inp.qm[self.ispec]
         pcl = ChargedParticle(pos, vel, q_m)
-        prob, pcl_last = sim.get_prob(
+        prob, pcl_last = self.sim.get_prob(
             pcl, dt, max_step=self.maxstep, history=history)
 
         return history, prob, pcl_last
