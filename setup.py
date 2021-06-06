@@ -20,7 +20,8 @@ setup(
     packages=find_packages(),
     entry_points={
         'console_scripts': [
-            'gen-vsolver = vdsolver.tools.emses.gentemp:gentemp',
+            'gen-vdsolver = vdsolver.tools.emses.gentemp:gentemp_vdsolver',
+            'gen-backtrace = vdsolver.tools.emses.gentemp:gentemp_backtrace',
         ]
     },
     classifiers=[
