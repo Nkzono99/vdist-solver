@@ -12,7 +12,7 @@ from vdsolver.core.boundaries import (RectangleX, RectangleY, RectangleZ,
 from vdsolver.sims import ESSimulator3d
 
 
-def create_simulator(data: emout.Emout,
+def create_default_simulator(data: emout.Emout,
                      ispec: int,
                      istep: int = -1,
                      use_si=False,
@@ -37,8 +37,6 @@ def create_simulator(data: emout.Emout,
     ez_data = data.ez[istep, :, :, :]
 
     if use_si:
-        import emout.utils.units as u
-        u.Units
         dx = data.utit.length.reverse(dx)
         path = data.utit.v.reverse(dx)
         vdri = data.unit.v.reverse(vdri)

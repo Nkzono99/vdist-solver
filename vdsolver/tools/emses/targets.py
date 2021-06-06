@@ -1,11 +1,9 @@
 from collections import deque
 from typing import Deque, List, Tuple
-from vdsolver.sims.essimulator import ChargedParticle, ESSimulator3d
-import emout
 
-import numpy as np
 import emout
-from .utils import create_simulator
+import numpy as np
+from vdsolver.sims.essimulator import ChargedParticle, ESSimulator3d
 
 
 class Target:
@@ -61,7 +59,7 @@ class VSolveTarget(Target):
         vx = np.linspace(vmin[0], vmax[0], nv[0])
         vy = np.linspace(vmin[1], vmax[1], nv[1])
         vz = np.linspace(vmin[2], vmax[2], nv[2])
-        VX, VY, VZ = np.meshgrid(vx, vy, vz, indexing='ij')
+        VZ, VY, VX = np.meshgrid(vz, vy, vx, indexing='ij')
 
         vels = np.zeros((len(vz), len(vy), len(vx), 3))
         vels[:, :, :, 0] = VX
@@ -70,15 +68,42 @@ class VSolveTarget(Target):
 
         dt = self.data.inp.dt * self.dt
         q_m = self.data.inp.qm[self.ispec]
-        probs = self.sim.get_probs(pos, vels, q_m, dt,
+
+        pcls = []
+        for vel in vels.reshape(-1, vels.shape[-1]):
+            pcl = ChargedParticle(pos, vel, q_m)
+            pcls.append(pcl)
+
+        probs = self.sim.get_probs(pcls=pcls,
+                                   dt=dt,
                                    max_step=self.maxstep,
-                                   show_progress=self.show_progress,
-                                   use_concurrent=self.max_workers != 1,
                                    max_workers=self.max_workers,
-                                   chunksize=self.chunksize)
+                                   chunksize=self.chunksize,
+                                   show_progress=self.show_progress)
+        probs = probs.reshape(vels.shape[:-1])
         self.probs = probs
 
         return vels, probs
+
+
+class ESWorker:
+    def __init__(self,
+                 sim: ESSimulator3d,
+                 pos: np.ndarray,
+                 q_m: float,
+                 dt: float,
+                 max_step: int):
+        self.sim = sim
+        self.pos = pos
+        self.q_m = q_m
+        self.dt = dt
+        self.max_step = max_step
+
+    def __call__(self, arg: Tuple[int, np.ndarray]) -> Tuple[int, float]:
+        i, vel = arg
+        pcl = ChargedParticle(self.pos, vel, self.q_m)
+        prob, _ = self.sim.get_prob(pcl, self.dt, self.max_step)
+        return i, prob
 
 
 class BackTraceTraget(Target):
@@ -100,8 +125,6 @@ class BackTraceTraget(Target):
         self.dt = dt
 
     def solve(self) -> Tuple[Deque[ChargedParticle], float, ChargedParticle]:
-        sim = create_simulator(self.data, self.ispec, self.istep)
-
         pos = np.array(self.position)
         vel = np.array(self.velocity)
 
@@ -110,7 +133,7 @@ class BackTraceTraget(Target):
         dt = self.data.inp.dt * self.dt
         q_m = self.data.inp.qm[self.ispec]
         pcl = ChargedParticle(pos, vel, q_m)
-        prob, pcl_last = sim.get_prob(
+        prob, pcl_last = self.sim.get_prob(
             pcl, dt, max_step=self.maxstep, history=history)
 
         return history, prob, pcl_last
