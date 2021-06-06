@@ -18,12 +18,14 @@ pip install git+https://github.com/Nkzono99/vdist-solver.git
 ```
 
 ## Usage
-```
-> gen-vsolver 'xz'  # Create template script of vdist-solver
-
+``` 
+# Use velocity distribution function solver
+> gen-vdsolver 'xz'  # Create template script of vdist-solver
 > vim vdist-solver.py  # Change settings
-
-> python vdist-solver.py --help  # show help message
-
 > python vdist-solver.py -d "<directory>"  # Plot distribution
+
+# Use backtrace solver
+> gen-backtrace 'xz'  # Create template script of backtrace-solver
+> vim backtrace-solver.py  # Change settings
+> python backtrace-solver.py -d "<directory>"  # Plot backtrace-orbit of particle
 ```
