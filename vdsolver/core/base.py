@@ -1,8 +1,8 @@
-from typing import Any, Callable, Generator, List, Tuple
+from concurrent import futures
+from typing import Any, Callable, List, Tuple
 
 import numpy as np
 from tqdm import tqdm
-from concurrent import futures
 
 
 class Particle:
@@ -399,7 +399,7 @@ class Simulator:
                               max_step: int,
                               max_workers: int = 4,
                               chunksize: int = 100,
-                              show_progress: bool = False
+                              show_progress: bool = False,
                               ) -> np.ndarray:
         probs = np.zeros(len(pcls))
 
