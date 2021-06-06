@@ -90,7 +90,7 @@ def parse_args_backtrace():
 
 
 def gentemp_backtrace():
-    args = parse_args_backtrace
+    args = parse_args_backtrace()
 
     chars = list(args.axises)
     c1, c2 = chars
