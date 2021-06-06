@@ -72,7 +72,6 @@ def main():
     probs = probs.reshape(N{C1})
 
     plt.plot(V{C1}, probs)
-    plt.colorbar()
     plt.xlabel('V{C1}')
     plt.ylabel('Probability')
 
