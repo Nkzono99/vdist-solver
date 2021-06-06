@@ -1,6 +1,8 @@
-from typing import Any, Callable, List, Tuple
+from typing import Any, Callable, Generator, List, Tuple
 
 import numpy as np
+from tqdm import tqdm
+from concurrent import futures
 
 
 class Particle:
@@ -81,9 +83,35 @@ class Boundary:
         self._func_prob = func_prob
 
     def detect_collision(self, pcl: Particle, pcl_next: Particle) -> CollisionRecord:
+        """Detect particle-boundary collision.
+
+        Parameters
+        ----------
+        pcl : Particle
+            particle before update
+        pcl_next : Particle
+            particle after update
+
+        Returns
+        -------
+        CollisionRecord
+            the record including the collision informations
+        """
         raise NotImplementedError()
 
     def get_prob(self, vel: np.ndarray) -> float:
+        """Return the probability of existence at the velocity.
+
+        Parameters
+        ----------
+        vel : np.ndarray
+            velocity
+
+        Returns
+        -------
+        float
+            the probability of existence at the velocity
+        """
         return self._func_prob(vel)
 
 
@@ -102,6 +130,8 @@ class BoundaryList(Boundary):
         raise Exception('BoundaryList.get_prob is not exists.')
 
     def expand(self):
+        """Expand nested boundary lists to make it faster.
+        """
         boundaries_new = []
         for boundary in self.boundaries:
             if isinstance(boundary, BoundaryList):
@@ -114,6 +144,18 @@ class BoundaryList(Boundary):
 
 class Field:
     def __call__(self, pos: np.ndarray) -> Any:
+        """Return some value at the position.
+
+        Parameters
+        ----------
+        pos : np.ndarray
+            position
+
+        Returns
+        -------
+        Any
+            some value at the position
+        """
         raise NotImplementedError()
 
 
@@ -128,6 +170,18 @@ class FieldScalar(Field):
         self.nz, self.ny, self.nx = data3d.shape
 
     def __call__(self, pos: np.ndarray) -> float:
+        """Return scalar value at the position.
+
+        Parameters
+        ----------
+        pos : np.ndarray
+            position
+
+        Returns
+        -------
+        Any
+            scalar value at the position
+        """
         lpos = (pos - self.offsets) / self.dx
         ipos = lpos.astype(int)
         rpos = lpos - ipos
@@ -155,11 +209,34 @@ class FieldScalar(Field):
 
 class FieldVector3d(Field):
     def __call__(self, pos: np.ndarray) -> np.ndarray:
+        """Return vector value at the position.
+
+        Parameters
+        ----------
+        pos : np.ndarray
+            position
+
+        Returns
+        -------
+        np.ndarray
+            vector value at the position
+        """
         raise NotImplementedError()
 
 
 class SimpleFieldVector3d(FieldVector3d):
     def __init__(self, xfield: FieldScalar, yfield: FieldScalar, zfield: FieldScalar):
+        """Initialize the simple implemented FieldVector3d object.
+
+        Parameters
+        ----------
+        xfield : FieldScalar
+            x-axis field
+        yfield : FieldScalar
+            y-axis field
+        zfield : FieldScalar
+            z-axis field
+        """
         self.xfield = xfield
         self.yfield = yfield
         self.zfield = zfield
@@ -176,29 +253,64 @@ class Simulator:
         self.boundary_list = boundary_list
 
     def _backward(self, pcl: Particle, dt: float) -> Particle:
+        """Back trace particle.
+
+        Parameters
+        ----------
+        pcl : Particle
+            particle
+        dt : float
+            simulation time width
+
+        Returns
+        -------
+        Particle
+            updated particle
+
+            this updated particle and parameters' particle have to be different because apply-boundary after this method needs previous and next particles.
+        """
         raise NotImplementedError()
 
     def _apply_boundary(self, pcl: Particle) -> Particle:
+        """Apply boundary conditions. 
+
+        This method called after self._backward.
+
+        Parameters
+        ----------
+        pcl : Particle
+            updated particle
+
+        Returns
+        -------
+        Particle
+            boundary-applied particle
+        """
         pass
-
-    def get_probs(self,
-                  pos: np.ndarray,
-                  vels: np.ndarray,
-                  dt: float,
-                  max_step: int) -> float:
-        probs = []
-
-        for vel in vels.reshape(-1, vels.shape[-1]):
-            pcl = Particle(pos, vel)
-            prob, _ = self.get_prob(pcl, dt, max_step)
-            probs.append(prob)
-        return np.array(probs).reshape(vels.shape[:-1])
 
     def get_prob(self,
                  pcl: Particle,
                  dt: float,
                  max_step: int,
                  history: List[Particle] = None) -> Tuple[float, Particle]:
+        """Caluculate and return the probability of existence of the particle.
+
+        Parameters
+        ----------
+        pcl : Particle
+            particle
+        dt : float
+            simulation time width
+        max_step : int
+            max steps of simulation
+        history : List[Particle], optional
+            history list, store pcl-orbit if history is not None, by default None
+
+        Returns
+        -------
+        Tuple[float, Particle]
+            the probability of existence and the particle at the last step
+        """
         self._apply_boundary(pcl)
         if history is not None:
             history.append(pcl)
@@ -217,3 +329,121 @@ class Simulator:
             if record is not None and record.boundary is not None:
                 return record.boundary.get_prob(record.pcl.vel), pcl
         return 0.0, pcl
+
+    def get_probs(self,
+                  pcls: List[Particle],
+                  dt: float,
+                  max_step: int,
+                  max_workers: int = 1,
+                  chunksize: int = 100,
+                  show_progress: bool = True,
+                  ) -> np.ndarray:
+        """Return the probabilities of the existence of the particles.
+
+        Parameters
+        ----------
+        pcls : List[Particle]
+            particles list
+        dt : float
+            simulation time width
+        max_step : int
+            max steps of simulation
+        max_workers : int, optional
+            calculate using process parallelism if max_workers > 1, by default 1
+        chunksize : int, optional
+            chunksize, this is used if max_workers > 1, by default 100
+        show_progress : bool, optional
+            show progress if True, by default True
+
+        Returns
+        -------
+        np.ndarray
+            the probabilities of the existence of the particles
+        """
+        if max_workers == 1:
+            return self._get_probs_serial(
+                pcls=pcls,
+                dt=dt,
+                max_step=max_step,
+                show_progress=show_progress)
+        elif max_workers > 1:
+            return self._get_probs_concurrent(
+                pcls=pcls,
+                dt=dt,
+                max_step=max_step,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                show_progress=show_progress,
+            )
+
+    def _get_probs_serial(self,
+                          pcls: List[Particle],
+                          dt: float,
+                          max_step: int,
+                          show_progress: bool = False,
+                          ) -> np.ndarray:
+        probs = np.zeros(len(pcls))
+
+        if show_progress:
+            pcls = tqdm(pcls)
+
+        for i, pcl in enumerate(pcls):
+            prob, _ = self.get_prob(pcl, dt, max_step)
+            probs[i] = prob
+
+        return np.array(probs)
+
+    def _get_probs_concurrent(self,
+                              pcls: List[Particle],
+                              dt: float,
+                              max_step: int,
+                              max_workers: int = 4,
+                              chunksize: int = 100,
+                              show_progress: bool = False
+                              ) -> np.ndarray:
+        probs = np.zeros(len(pcls))
+
+        with futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+            worker = ConcurrentWorker(self, dt, max_step)
+            mapped = executor.map(worker,
+                                  zip(range(len(pcls)), pcls),
+                                  chunksize=chunksize)
+
+            if show_progress:
+                mapped = tqdm(mapped, total=len(pcls))
+
+            try:
+                for i, prob in mapped:
+                    probs[i] = prob
+            except KeyboardInterrupt:
+                executor.shutdown()
+                exit(1)
+
+        return probs
+
+
+class ConcurrentWorker:
+    def __init__(self,
+                 sim: Simulator,
+                 dt: float,
+                 max_step: int):
+        self.sim = sim
+        self.dt = dt
+        self.max_step = max_step
+
+    def __call__(self, arg: Tuple[int, Particle]) -> Tuple[int, float]:
+        """Returns the probability of existence of a particle.
+
+        Parameters
+        ----------
+        arg : Tuple[int, Particle]
+            the index and the particle
+
+        Returns
+        -------
+        Tuple[int, float]
+            the index and probability of existence of the particle
+        """
+        i, pcl = arg
+        prob, _ = self.sim.get_prob(pcl, self.dt, self.max_step)
+        return i, prob

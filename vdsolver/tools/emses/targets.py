@@ -6,6 +6,8 @@ import emout
 import numpy as np
 import emout
 from .utils import create_simulator
+from tqdm import tqdm
+from concurrent import futures
 
 
 class Target:
@@ -70,15 +72,42 @@ class VSolveTarget(Target):
 
         dt = self.data.inp.dt * self.dt
         q_m = self.data.inp.qm[self.ispec]
-        probs = self.sim.get_probs(pos, vels, q_m, dt,
+
+        pcls = []
+        for vel in vels.reshape(-1, vels.shape[-1]):
+            pcl = ChargedParticle(pos, vel, q_m)
+            pcls.append(pcl)
+
+        probs = self.sim.get_probs(pcls=pcls,
+                                   dt=dt,
                                    max_step=self.maxstep,
-                                   show_progress=self.show_progress,
-                                   use_concurrent=self.max_workers != 1,
                                    max_workers=self.max_workers,
-                                   chunksize=self.chunksize)
+                                   chunksize=self.chunksize,
+                                   show_progress=self.show_progress)
+        probs = probs.reshape(vels.shape[:-1])
         self.probs = probs
 
         return vels, probs
+
+
+class ESWorker:
+    def __init__(self,
+                 sim: ESSimulator3d,
+                 pos: np.ndarray,
+                 q_m: float,
+                 dt: float,
+                 max_step: int):
+        self.sim = sim
+        self.pos = pos
+        self.q_m = q_m
+        self.dt = dt
+        self.max_step = max_step
+
+    def __call__(self, arg: Tuple[int, np.ndarray]) -> Tuple[int, float]:
+        i, vel = arg
+        pcl = ChargedParticle(self.pos, vel, self.q_m)
+        prob, _ = self.sim.get_prob(pcl, self.dt, self.max_step)
+        return i, prob
 
 
 class BackTraceTraget(Target):
