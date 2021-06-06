@@ -61,7 +61,7 @@ class VSolveTarget(Target):
         vx = np.linspace(vmin[0], vmax[0], nv[0])
         vy = np.linspace(vmin[1], vmax[1], nv[1])
         vz = np.linspace(vmin[2], vmax[2], nv[2])
-        VX, VY, VZ = np.meshgrid(vx, vy, vz, indexing='ij')
+        VZ, VY, VX = np.meshgrid(vz, vy, vx, indexing='ij')
 
         vels = np.zeros((len(vz), len(vy), len(vx), 3))
         vels[:, :, :, 0] = VX

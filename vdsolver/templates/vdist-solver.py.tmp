@@ -59,13 +59,13 @@ def main():
 
     vels, probs = target.solve()
 
-    vels = vels.reshape(N{C1}, N{C2}, 3)
+    vels = vels.reshape(N{C2}, N{C1}, 3)
     V{C1} = vels[:, :, {i1}]
     V{C2} = vels[:, :, {i2}]
     if args.use_si:
         V{C1} = data.unit.v.reverse(V{C1})
         V{C2} = data.unit.v.reverse(V{C2})
-    probs = probs.reshape(N{C1}, N{C2})
+    probs = probs.reshape(N{C2}, N{C1})
 
     plt.pcolormesh(V{C1}, V{C2}, probs, shading='auto')
     plt.colorbar()
