@@ -1,13 +1,9 @@
 from collections import deque
 from typing import Deque, List, Tuple
-from vdsolver.sims.essimulator import ChargedParticle, ESSimulator3d
-import emout
 
-import numpy as np
 import emout
-from .utils import create_simulator
-from tqdm import tqdm
-from concurrent import futures
+import numpy as np
+from vdsolver.sims.essimulator import ChargedParticle, ESSimulator3d
 
 
 class Target:
@@ -129,8 +125,6 @@ class BackTraceTraget(Target):
         self.dt = dt
 
     def solve(self) -> Tuple[Deque[ChargedParticle], float, ChargedParticle]:
-        sim = create_simulator(self.data, self.ispec, self.istep)
-
         pos = np.array(self.position)
         vel = np.array(self.velocity)
 

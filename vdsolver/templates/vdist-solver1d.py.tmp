@@ -3,24 +3,28 @@ from argparse import ArgumentParser
 import emout
 import matplotlib.pyplot as plt
 import numpy as np
-
 from vdsolver.tools.emses import VSolveTarget
-from vdsolver.tools.emses.utils import create_simulator
+from vdsolver.tools.emses.utils import create_default_simulator
 
 
 def parse_args():
     parser = ArgumentParser()
 
-    parser.add_argument('--directory', '-d')
+    parser.add_argument('--directory', '-d', default='./')
     parser.add_argument('--istep', '-is', default=-1, type=int)
     parser.add_argument('--ispec', '-i', default=0, type=int)
     parser.add_argument('--dt', '-dt', default=1.0, type=float)
     parser.add_argument('--maxstep', '-ms', default=10000, type=int)
     parser.add_argument('--max_workers', '-mw', default=8, type=int)
-    parser.add_argument('--chunksize', '-chk', default=1, type=int)
+    parser.add_argument('--chunksize', '-chk', default=100, type=int)
     parser.add_argument('--use_si', action='store_true')
 
     return parser.parse_args()
+
+
+def create_simulator(*args, **kwargs):
+    sim = None
+    return sim
 
 
 def main():
@@ -38,8 +42,11 @@ def main():
     max_velocity = [vxlim[1], vylim[1], vzlim[1]]
     nvelocities = [vxlim[2], vylim[2], vzlim[2]]
 
-    sim = create_simulator(data, args.ispec,
-                           args.istep, use_si=False)
+    # Create simulator
+    sim = create_default_simulator(data, args.ispec, args.istep,
+                                   use_si=False,
+                                   use_hole=True)
+    # sim = create_simulator()
 
     target = VSolveTarget(data,
                           sim,
