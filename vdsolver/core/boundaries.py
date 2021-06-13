@@ -22,7 +22,7 @@ class Plane2d(Boundary):
                          ) -> CollisionRecord:
         d1 = pcl.pos[self.idx] - self.val
         d2 = pcl_next.pos[self.idx] - self.val
-        if d1 * d2 > 0:
+        if d1 * d2 >= 0:
             return None
 
         r = abs(d1) / (abs(d1) + abs(d2))
@@ -68,7 +68,7 @@ class ParallelRectangle(Boundary):
                          ) -> CollisionRecord:
         d1 = pcl.pos[self.idxs[0]] - self.pos[self.idxs[0]]
         d2 = pcl_next.pos[self.idxs[0]] - self.pos[self.idxs[0]]
-        if d1 * d2 > 0:
+        if d1 * d2 >= 0:
             return None
 
         r = abs(d1) / (abs(d1) + abs(d2))
