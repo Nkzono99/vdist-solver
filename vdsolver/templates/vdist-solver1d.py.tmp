@@ -3,7 +3,7 @@ from argparse import ArgumentParser
 import emout
 import matplotlib.pyplot as plt
 import numpy as np
-from vdsolver.tools.emses import VSolveTarget
+from vdsolver.tools.emses import VSolveTarget, PhaseGrid
 from vdsolver.tools.emses.utils import create_default_simulator
 
 
@@ -11,6 +11,7 @@ def parse_args():
     parser = ArgumentParser()
 
     parser.add_argument('--directory', '-d', default='./')
+    parser.add_argument('--output', '-o', default=None)
     parser.add_argument('--istep', '-is', default=-1, type=int)
     parser.add_argument('--ispec', '-i', default=0, type=int)
     parser.add_argument('--dt', '-dt', default=1.0, type=float)
@@ -34,13 +35,9 @@ def main():
 
     N{C1} = 100
 
-    pos = np.array([0, 0, 0])
-
-    {lim}
-
-    min_velocity = [vxlim[0], vylim[0], vzlim[0]]
-    max_velocity = [vxlim[1], vylim[1], vzlim[1]]
-    nvelocities = [vxlim[2], vylim[2], vzlim[2]]
+    phase_grid = PhaseGrid(
+        {phase}
+    )
 
     # Create simulator
     sim = create_default_simulator(data, args.ispec, args.istep,
@@ -50,10 +47,7 @@ def main():
 
     target = VSolveTarget(data,
                           sim,
-                          pos,
-                          min_velocity,
-                          max_velocity,
-                          nvelocities,
+                          phase_grid,
                           args.maxstep,
                           args.max_workers,
                           args.chunksize,
@@ -63,19 +57,22 @@ def main():
                           show_progress=True,
                           )
 
-    vels, probs = target.solve()
+    phases, probs = target.solve()
 
-    vels = vels.reshape(N{C1}, 3)
-    V{C1} = vels[:, {i1}]
+    phases = phases.reshape(N{C1}, 6)
+    {C1} = phases[:, {i1}]
     if args.use_si:
-        V{C1} = data.unit.v.reverse(V{C1})
+        {C1} = data.unit.v.reverse({C1})
     probs = probs.reshape(N{C1})
 
-    plt.plot(V{C1}, probs)
-    plt.xlabel('V{C1}')
+    plt.plot({C1}, probs)
+    plt.xlabel('{C1}')
     plt.ylabel('Probability')
 
-    plt.show()
+    if args.output is None:
+        plt.show()
+    else:
+        plt.gcf().savefig(args.output)
 
 
 if __name__ == '__main__':
