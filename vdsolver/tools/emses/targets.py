@@ -86,26 +86,6 @@ class VSolveTarget(Target):
         return vels, probs
 
 
-class ESWorker:
-    def __init__(self,
-                 sim: ESSimulator3d,
-                 pos: np.ndarray,
-                 q_m: float,
-                 dt: float,
-                 max_step: int):
-        self.sim = sim
-        self.pos = pos
-        self.q_m = q_m
-        self.dt = dt
-        self.max_step = max_step
-
-    def __call__(self, arg: Tuple[int, np.ndarray]) -> Tuple[int, float]:
-        i, vel = arg
-        pcl = ChargedParticle(self.pos, vel, self.q_m)
-        prob, _ = self.sim.get_prob(pcl, self.dt, self.max_step)
-        return i, prob
-
-
 class BackTraceTraget(Target):
     def __init__(self,
                  data,
