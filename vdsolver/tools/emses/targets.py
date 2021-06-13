@@ -1,15 +1,19 @@
 from collections import deque
-from typing import Deque, List, Tuple
+from typing import Deque, List, Tuple, Union
+from vdsolver.core.base import Simulator
+from vdsolver.core import probs
 
 import emout
 import numpy as np
+from numpy.lib.arraysetops import isin
 from vdsolver.sims.essimulator import ChargedParticle, ESSimulator3d
+from dataclasses import dataclass
 
 
+@dataclass
 class Target:
-    def __init__(self, data: emout.Emout, sim: ESSimulator3d):
-        self.data = data
-        self.sim = sim
+    data: emout.Emout
+    sim: ESSimulator3d
 
     def solve(self):
         raise NotImplementedError()
@@ -19,58 +23,108 @@ class Target:
         return cls(data, sim, **targetdict)
 
 
-class VSolveTarget(Target):
-    def __init__(self,
-                 data: emout.Emout,
-                 sim: ESSimulator3d,
-                 position: List[float],
-                 min_velocity: List[float],
-                 max_velocity: List[float],
-                 nvelocities: List[int],
-                 maxstep: int,
-                 max_workers: int,
-                 chunksize: int,
-                 ispec: int,
-                 dt: float,
-                 istep: int,
-                 show_progress: bool = True,
-                 ):
-        super().__init__(data, sim)
-        self.position = position
-        self.min_velocity = min_velocity
-        self.max_velocity = max_velocity
-        self.nvelocities = nvelocities
-        self.maxstep = maxstep
-        self.max_workers = max_workers
-        self.chunksize = chunksize
-        self.ispec = ispec
-        self.dt = dt
-        self.istep = istep
+@dataclass
+class Lim:
+    start: float
+    end: float
+    num: int
 
-        self.show_progress = show_progress
-        self.probs = None
+    @classmethod
+    def create(cls, val: float):
+        return Lim(val, val, 1)
+
+    def tolist(self):
+        return [self.start, self.end, self.num]
+
+
+lim_like = Union[Lim, Tuple[float, float, int], float]
+
+
+@dataclass
+class PhaseGrid:
+    x: lim_like
+    y: lim_like
+    z: lim_like
+    vx: lim_like
+    vy: lim_like
+    vz: lim_like
+
+    def _lim(self, val: lim_like) -> Lim:
+        if isinstance(val, Lim):
+            return val
+        if isinstance(val, Tuple):
+            return Lim(*val)
+        else:
+            return Lim.create(val)
+
+    @property
+    def xlim(self) -> Lim:
+        return self._lim(self.x)
+
+    @property
+    def ylim(self) -> Lim:
+        return self._lim(self.y)
+
+    @property
+    def zlim(self) -> Lim:
+        return self._lim(self.z)
+
+    @property
+    def vxlim(self) -> Lim:
+        return self._lim(self.vx)
+
+    @property
+    def vylim(self) -> Lim:
+        return self._lim(self.vy)
+
+    @property
+    def vzlim(self) -> Lim:
+        return self._lim(self.vz)
+
+    def create_grid(self) -> np.ndarray:
+        x = np.linspace(*self.xlim.tolist())
+        y = np.linspace(*self.ylim.tolist())
+        z = np.linspace(*self.zlim.tolist())
+        vx = np.linspace(*self.vxlim.tolist())
+        vy = np.linspace(*self.vylim.tolist())
+        vz = np.linspace(*self.vzlim.tolist())
+
+        Z, Y, X, VZ, VY, VX = np.meshgrid(z, y, x, vz, vy, vx, indexing='ij')
+
+        grd = np.zeros((len(z), len(y), len(x), len(vz), len(vy), len(vx), 6))
+        grd[:, :, :, :, :, :, 0] = X
+        grd[:, :, :, :, :, :, 1] = Y
+        grd[:, :, :, :, :, :, 2] = Z
+        grd[:, :, :, :, :, :, 3] = VX
+        grd[:, :, :, :, :, :, 4] = VY
+        grd[:, :, :, :, :, :, 5] = VZ
+
+        return grd
+
+
+@dataclass
+class VSolveTarget(Target):
+    data: emout.Emout
+    sim: ESSimulator3d
+    phase_grid: PhaseGrid
+    maxstep: int
+    max_workers: int
+    chunksize: int
+    ispec: int
+    dt: float
+    istep: int
+    show_progress: bool = True
 
     def solve(self) -> Tuple[np.ndarray, np.ndarray]:
-        pos = np.array(self.position)
-
-        vmin = self.min_velocity
-        vmax = self.max_velocity
-        nv = self.nvelocities
-        vx = np.linspace(vmin[0], vmax[0], nv[0])
-        vy = np.linspace(vmin[1], vmax[1], nv[1])
-        vz = np.linspace(vmin[2], vmax[2], nv[2])
-        VZ, VY, VX = np.meshgrid(vz, vy, vx, indexing='ij')
-
-        vels = np.zeros((len(vz), len(vy), len(vx), 3))
-        vels[:, :, :, 0] = VX
-        vels[:, :, :, 1] = VY
-        vels[:, :, :, 2] = VZ
+        phases = self.phase_grid.create_grid()
 
         dt = self.data.inp.dt * self.dt
         q_m = self.data.inp.qm[self.ispec]
 
         pcls = []
-        for vel in vels.reshape(-1, vels.shape[-1]):
+        for phase in phases.reshape(-1, phases.shape[-1]):
+            pos = phase[:3]
+            vel = phase[3:]
             pcl = ChargedParticle(pos, vel, q_m)
             pcls.append(pcl)
 
@@ -80,49 +134,21 @@ class VSolveTarget(Target):
                                    max_workers=self.max_workers,
                                    chunksize=self.chunksize,
                                    show_progress=self.show_progress)
-        probs = probs.reshape(vels.shape[:-1])
-        self.probs = probs
+        probs = probs.reshape(phases.shape[:-1])
 
-        return vels, probs
-
-
-class ESWorker:
-    def __init__(self,
-                 sim: ESSimulator3d,
-                 pos: np.ndarray,
-                 q_m: float,
-                 dt: float,
-                 max_step: int):
-        self.sim = sim
-        self.pos = pos
-        self.q_m = q_m
-        self.dt = dt
-        self.max_step = max_step
-
-    def __call__(self, arg: Tuple[int, np.ndarray]) -> Tuple[int, float]:
-        i, vel = arg
-        pcl = ChargedParticle(self.pos, vel, self.q_m)
-        prob, _ = self.sim.get_prob(pcl, self.dt, self.max_step)
-        return i, prob
+        return phases, probs
 
 
+@dataclass
 class BackTraceTraget(Target):
-    def __init__(self,
-                 data,
-                 sim,
-                 istep: int,
-                 ispec: int,
-                 position: List[float],
-                 velocity: List[float],
-                 maxstep: int,
-                 dt: int):
-        super().__init__(data, sim)
-        self.istep = istep
-        self.ispec = ispec
-        self.position = position
-        self.velocity = velocity
-        self.maxstep = maxstep
-        self.dt = dt
+    data: emout.Emout
+    sim: ESSimulator3d
+    istep: int
+    ispec: int
+    position: List[float]
+    velocity: List[float]
+    maxstep: int
+    dt: int
 
     def solve(self) -> Tuple[Deque[ChargedParticle], float, ChargedParticle]:
         pos = np.array(self.position)

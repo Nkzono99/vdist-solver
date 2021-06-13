@@ -13,7 +13,13 @@ def parse_args_vdsolver():
 
 def gentemp_vdsolver():
     args = parse_args_vdsolver()
-    chars = list(args.axises)
+
+    axises: str = args.axises
+    if axises.startswith('v'):
+        chars = [axises[:2], axises[2:]]
+    else:
+        chars = [axises[:1], axises[1:]]
+
     if len(chars) == 1:
         gentemp_vdsolver1d(args, chars)
     elif len(chars) == 2:
@@ -29,20 +35,18 @@ def gentemp_vdsolver1d(args, chars):
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 
-    line = 'v{}lim = {}'
-    lim_str = line.format(
-        'x', '[-1.0, 1.0, NX]' if 'x' in chars else '[0.0, 0.0, 1]')
-    lim_str += '\n    '
-    lim_str += line.format('y',
-                           '[-1.0, 1.0, NY]' if 'y' in chars else '[0.0, 0.0, 1]')
-    lim_str += '\n    '
-    lim_str += line.format('z',
-                           '[-1.0, 1.0, NZ]' if 'z' in chars else '[0.0, 0.0, 1]')
+    axises = ['x', 'y', 'z', 'vx', 'vy', 'vz']
+
+    lim_strs = []
+    for axis in axises:
+        lim_str = '0' if axis not in chars else f'(-1, -1, N{axis.upper()})'
+        lim_strs.append(f'{axis}={lim_str}')
+    phase_str = ',\n        '.join(lim_strs)
 
     new = text.format(
         C1=C1,
-        i1=['x', 'y', 'z'].index(c1),
-        lim=lim_str,
+        i1=axises.index(c1),
+        phase=phase_str,
     )
 
     with open(args.output, 'w', encoding='utf-8') as f:
@@ -58,22 +62,20 @@ def gentemp_vdsolver2d(args, chars):
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 
-    line = 'v{}lim = {}'
-    lim_str = line.format(
-        'x', '[-1.0, 1.0, NX]' if 'x' in chars else '[0.0, 0.0, 1]')
-    lim_str += '\n    '
-    lim_str += line.format('y',
-                           '[-1.0, 1.0, NY]' if 'y' in chars else '[0.0, 0.0, 1]')
-    lim_str += '\n    '
-    lim_str += line.format('z',
-                           '[-1.0, 1.0, NZ]' if 'z' in chars else '[0.0, 0.0, 1]')
+    axises = ['x', 'y', 'z', 'vx', 'vy', 'vz']
+
+    lim_strs = []
+    for axis in axises:
+        lim_str = '0' if axis not in chars else f'(-1, -1, N{axis.upper()})'
+        lim_strs.append(f'{axis}={lim_str}')
+    phase_str = ',\n        '.join(lim_strs)
 
     new = text.format(
         C1=C1,
         C2=C2,
-        i1=['x', 'y', 'z'].index(c1),
-        i2=['x', 'y', 'z'].index(c2),
-        lim=lim_str,
+        i1=axises.index(c1),
+        i2=axises.index(c2),
+        phase=phase_str,
     )
 
     with open(args.output, 'w', encoding='utf-8') as f:
