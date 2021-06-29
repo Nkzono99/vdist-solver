@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument('--max_workers', '-mw', default=8, type=int)
     parser.add_argument('--chunksize', '-chk', default=100, type=int)
     parser.add_argument('--use_si', action='store_true')
+    parser.add_argument('--use_mpi', '-mpi', action='store_true')
 
     return parser.parse_args()
 
@@ -56,6 +57,7 @@ def main():
                           args.dt,
                           args.istep,
                           show_progress=True,
+                          use_mpi=args.use_mpi,
                           )
 
     phases, probs = target.solve()
