@@ -11,6 +11,7 @@ Velocity distribution function solver using Liouville's theorem
 * tqdm
 * scipy
 * emout
+* mpi4py (Install by yourself if use MPI)
 
 ## Installation
 ```
