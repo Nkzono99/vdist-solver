@@ -337,6 +337,7 @@ class Simulator:
                   max_workers: int = 1,
                   chunksize: int = 100,
                   show_progress: bool = True,
+                  use_mpi: bool = False,
                   ) -> np.ndarray:
         """Return the probabilities of the existence of the particles.
 
@@ -360,13 +361,23 @@ class Simulator:
         np.ndarray
             the probabilities of the existence of the particles
         """
-        if max_workers == 1:
+        if max_workers <= 1:
             return self._get_probs_serial(
                 pcls=pcls,
                 dt=dt,
                 max_step=max_step,
                 show_progress=show_progress)
-        elif max_workers > 1:
+
+        if use_mpi:
+            return self._get_probs_mpi(
+                pcls=pcls,
+                dt=dt,
+                max_step=max_step,
+                max_workers=max_workers,
+                chunksize=chunksize,
+                show_progress=show_progress,
+            )
+        else:
             return self._get_probs_concurrent(
                 pcls=pcls,
                 dt=dt,
@@ -404,6 +415,35 @@ class Simulator:
         probs = np.zeros(len(pcls))
 
         with futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
+            worker = ConcurrentWorker(self, dt, max_step)
+            mapped = executor.map(worker,
+                                  zip(range(len(pcls)), pcls),
+                                  chunksize=chunksize)
+
+            if show_progress:
+                mapped = tqdm(mapped, total=len(pcls))
+
+            try:
+                for i, prob in mapped:
+                    probs[i] = prob
+            except KeyboardInterrupt:
+                executor.shutdown()
+                exit(1)
+
+        return probs
+
+    def _get_probs_mpi(self,
+                              pcls: List[Particle],
+                              dt: float,
+                              max_step: int,
+                              max_workers: int = 4,
+                              chunksize: int = 100,
+                              show_progress: bool = False,
+                              ) -> np.ndarray:
+        from mpi4py.futures import MPIPoolExecutor
+        probs = np.zeros(len(pcls))
+
+        with MPIPoolExecutor(max_workers=max_workers) as executor:
             worker = ConcurrentWorker(self, dt, max_step)
             mapped = executor.map(worker,
                                   zip(range(len(pcls)), pcls),
