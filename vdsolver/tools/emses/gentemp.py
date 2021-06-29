@@ -39,7 +39,7 @@ def gentemp_vdsolver1d(args, chars):
 
     lim_strs = []
     for axis in axises:
-        lim_str = '0' if axis not in chars else f'(-1, -1, N{axis.upper()})'
+        lim_str = '0' if axis not in chars else f'(-1, 1, N{axis.upper()})'
         lim_strs.append(f'{axis}={lim_str}')
     phase_str = ',\n        '.join(lim_strs)
 
@@ -66,7 +66,7 @@ def gentemp_vdsolver2d(args, chars):
 
     lim_strs = []
     for axis in axises:
-        lim_str = '0' if axis not in chars else f'(-1, -1, N{axis.upper()})'
+        lim_str = '0' if axis not in chars else f'(-1, 1, N{axis.upper()})'
         lim_strs.append(f'{axis}={lim_str}')
     phase_str = ',\n        '.join(lim_strs)
 
