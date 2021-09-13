@@ -167,6 +167,7 @@ class FieldScalar(Field):
         self.data3d = data3d
         self.dx = dx
         self.offsets = offsets if offsets is not None else np.zeros(3)
+        self.offsets = np.array(offsets, dtype=np.float64)
         self.nz, self.ny, self.nx = data3d.shape
 
     def __call__(self, pos: np.ndarray) -> float:

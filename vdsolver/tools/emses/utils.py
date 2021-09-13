@@ -38,7 +38,7 @@ def create_default_simulator(data: emout.Emout,
 
     if use_si:
         dx = data.utit.length.reverse(dx)
-        path = data.utit.v.reverse(dx)
+        path = data.utit.v.reverse(path)
         vdri = data.unit.v.reverse(vdri)
 
         xl = data.unit.length.reverse(xl)
