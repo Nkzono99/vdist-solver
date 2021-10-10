@@ -346,6 +346,7 @@ class Simulator:
                   chunksize: int = 100,
                   show_progress: bool = True,
                   use_mpi: bool = False,
+                  adaptive_dt: bool = False
                   ) -> np.ndarray:
         """Return the probabilities of the existence of the particles.
 
@@ -374,7 +375,8 @@ class Simulator:
                 pcls=pcls,
                 dt=dt,
                 max_step=max_step,
-                show_progress=show_progress)
+                show_progress=show_progress,
+                adaptive_dt=adaptive_dt)
 
         if use_mpi:
             return self._get_probs_mpi(
@@ -384,6 +386,7 @@ class Simulator:
                 max_workers=max_workers,
                 chunksize=chunksize,
                 show_progress=show_progress,
+                adaptive_dt=adaptive_dt
             )
         else:
             return self._get_probs_concurrent(
@@ -393,6 +396,7 @@ class Simulator:
                 max_workers=max_workers,
                 chunksize=chunksize,
                 show_progress=show_progress,
+                adaptive_dt=adaptive_dt
             )
 
     def _get_probs_serial(self,
@@ -400,6 +404,7 @@ class Simulator:
                           dt: float,
                           max_step: int,
                           show_progress: bool = False,
+                          adaptive_dt: bool = False
                           ) -> np.ndarray:
         probs = np.zeros(len(pcls))
 
@@ -407,7 +412,7 @@ class Simulator:
             pcls = tqdm(pcls)
 
         for i, pcl in enumerate(pcls):
-            prob, _ = self.get_prob(pcl, dt, max_step)
+            prob, _ = self.get_prob(pcl, dt, max_step, adaptive_dt=adaptive_dt)
             probs[i] = prob
 
         return np.array(probs)
@@ -419,11 +424,13 @@ class Simulator:
                               max_workers: int = 4,
                               chunksize: int = 100,
                               show_progress: bool = False,
+                              adaptive_dt: bool = False,
                               ) -> np.ndarray:
         probs = np.zeros(len(pcls))
 
         with futures.ProcessPoolExecutor(max_workers=max_workers) as executor:
-            worker = ConcurrentWorker(self, dt, max_step)
+            worker = ConcurrentWorker(
+                self, dt, max_step, adaptive_dt=adaptive_dt)
             mapped = executor.map(worker,
                                   zip(range(len(pcls)), pcls),
                                   chunksize=chunksize)
@@ -441,18 +448,20 @@ class Simulator:
         return probs
 
     def _get_probs_mpi(self,
-                              pcls: List[Particle],
-                              dt: float,
-                              max_step: int,
-                              max_workers: int = 4,
-                              chunksize: int = 100,
-                              show_progress: bool = False,
-                              ) -> np.ndarray:
+                       pcls: List[Particle],
+                       dt: float,
+                       max_step: int,
+                       max_workers: int = 4,
+                       chunksize: int = 100,
+                       show_progress: bool = False,
+                       adaptive_dt: bool = False,
+                       ) -> np.ndarray:
         from mpi4py.futures import MPIPoolExecutor
         probs = np.zeros(len(pcls))
 
         with MPIPoolExecutor(max_workers=max_workers) as executor:
-            worker = ConcurrentWorker(self, dt, max_step)
+            worker = ConcurrentWorker(
+                self, dt, max_step, adaptive_dt=adaptive_dt)
             mapped = executor.map(worker,
                                   zip(range(len(pcls)), pcls),
                                   chunksize=chunksize)
@@ -474,10 +483,12 @@ class ConcurrentWorker:
     def __init__(self,
                  sim: Simulator,
                  dt: float,
-                 max_step: int):
+                 max_step: int,
+                 adaptive_dt: bool = False):
         self.sim = sim
         self.dt = dt
         self.max_step = max_step
+        self.adaptive_dt = adaptive_dt
 
     def __call__(self, arg: Tuple[int, Particle]) -> Tuple[int, float]:
         """Returns the probability of existence of a particle.
@@ -493,5 +504,6 @@ class ConcurrentWorker:
             the index and probability of existence of the particle
         """
         i, pcl = arg
-        prob, _ = self.sim.get_prob(pcl, self.dt, self.max_step)
+        prob, _ = self.sim.get_prob(pcl, self.dt, self.max_step,
+                                    adaptive_dt=self.adaptive_dt)
         return i, prob
