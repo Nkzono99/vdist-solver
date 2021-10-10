@@ -293,7 +293,8 @@ class Simulator:
                  pcl: Particle,
                  dt: float,
                  max_step: int,
-                 history: List[Particle] = None) -> Tuple[float, Particle]:
+                 history: List[Particle] = None,
+                 adaptive_dt: bool = False) -> Tuple[float, Particle]:
         """Caluculate and return the probability of existence of the particle.
 
         Parameters
@@ -306,6 +307,8 @@ class Simulator:
             max steps of simulation
         history : List[Particle], optional
             history list, store pcl-orbit if history is not None, by default None
+        adaptive_dt: bool
+            True if use adaptive dt (adaptive dt := dt / norm(pcl.vel))
 
         Returns
         -------
@@ -317,7 +320,11 @@ class Simulator:
             history.append(pcl)
 
         for _ in range(max_step):
-            pcl_next = self._backward(pcl, dt)
+            if adaptive_dt:
+                tmp_dt = dt / np.linalg.norm(pcl.vel, ord=2)
+            else:
+                tmp_dt = dt
+            pcl_next = self._backward(pcl, tmp_dt)
 
             record = self.boundary_list.detect_collision(pcl, pcl_next)
 
