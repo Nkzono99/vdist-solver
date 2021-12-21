@@ -4,6 +4,8 @@ from typing import Any, Callable, List, Tuple
 import numpy as np
 from tqdm import tqdm
 
+from vdsolver.core.probs import NoProb
+
 
 class Particle:
     """The Particle in the phase space.
@@ -73,14 +75,26 @@ class CollisionRecord:
             return
         if self.t < record.t:
             return
-        self.boundary = record.boundary
-        self.t = record.t
-        self.pcl = record.pcl
+        elif self.t == record.t \
+                and self.boundary.priority < record.boundary.priority:
+            self.boundary = record.boundary
+            return
+        else:
+            self.boundary = record.boundary
+            self.t = record.t
+            self.pcl = record.pcl
 
 
 class Boundary:
-    def __init__(self, func_prob: Callable[[np.ndarray], float]):
-        self._func_prob = func_prob
+    def __init__(self,
+                 prob_func: Callable[[np.ndarray], float],
+                 priority: int = -1):
+        self.prob_func = prob_func
+        self._priority = priority
+
+    @property
+    def priority(self):
+        return self._priority
 
     def detect_collision(self, pcl: Particle, pcl_next: Particle) -> CollisionRecord:
         """Detect particle-boundary collision.
@@ -112,14 +126,19 @@ class Boundary:
         float
             the probability of existence at the velocity
         """
-        return self._func_prob(vel)
+        return self.prob_func(vel)
 
 
 class BoundaryList(Boundary):
-    def __init__(self, boundaries: List[Boundary]):
+    def __init__(self,
+                 boundaries: List[Boundary],
+                 priority: int = -1):
+        super().__init__(None, priority)
         self.boundaries = boundaries
 
-    def detect_collision(self, pcl: Particle, pcl_next: Particle) -> CollisionRecord:
+    def detect_collision(self,
+                         pcl: Particle,
+                         pcl_next: Particle) -> CollisionRecord:
         record = CollisionRecord()
         for boundary in self.boundaries:
             record_new = boundary.detect_collision(pcl, pcl_next)
