@@ -16,20 +16,24 @@ def create_default_simulator(data: emout.Emout,
                      ispec: int,
                      istep: int = -1,
                      use_si=False,
-                     use_hole=True) -> ESSimulator3d:
+                     use_hole: bool=None) -> ESSimulator3d:
     # Basic parameters
     nx, ny, nz = data.inp.nx, data.inp.ny, data.inp.nz
     dx = 1.0
     path = data.inp.path[ispec]
     vdri = data.inp.vdri[ispec]
 
+    if use_hole is None:
+        use_hole = 'xlrechole' in data.inp
+
     # Hole parapeters
-    xl = data.inp.xlrechole[0]
-    xu = data.inp.xurechole[0]
-    yl = data.inp.xlrechole[0]
-    yu = data.inp.yurechole[0]
-    zl = data.inp.zlrechole[1]
-    zu = data.inp.zurechole[0]
+    if use_hole:
+        xl = data.inp.xlrechole[0]
+        xu = data.inp.xurechole[0]
+        yl = data.inp.xlrechole[0]
+        yu = data.inp.yurechole[0]
+        zl = data.inp.zlrechole[1]
+        zu = data.inp.zurechole[0]
 
     # Electric field settings
     ex_data = data.ex[istep, :, :, :]
@@ -41,12 +45,13 @@ def create_default_simulator(data: emout.Emout,
         path = data.utit.v.reverse(path)
         vdri = data.unit.v.reverse(vdri)
 
-        xl = data.unit.length.reverse(xl)
-        xu = data.unit.length.reverse(xu)
-        yl = data.unit.length.reverse(yl)
-        yu = data.unit.length.reverse(yu)
-        zl = data.unit.length.reverse(zl)
-        zu = data.unit.length.reverse(zu)
+        if use_hole:
+            xl = data.unit.length.reverse(xl)
+            xu = data.unit.length.reverse(xu)
+            yl = data.unit.length.reverse(yl)
+            yu = data.unit.length.reverse(yu)
+            zl = data.unit.length.reverse(zl)
+            zu = data.unit.length.reverse(zu)
 
         ex_data = ex_data.val_si
         ey_data = ey_data.val_si
