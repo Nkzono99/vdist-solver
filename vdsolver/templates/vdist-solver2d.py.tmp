@@ -70,13 +70,13 @@ def main():
 
     phases, probs = target.solve()
 
-    phases = phases.reshape(N{C2}, N{C1}, 6)
+    phases = phases.reshape({shape}, 6)
     {C1} = phases[:, :, {i1}]
     {C2} = phases[:, :, {i2}]
     if args.use_si:
-        {C1} = data.unit.v.reverse({C1})
-        {C2} = data.unit.v.reverse({C2})
-    probs = probs.reshape(N{C2}, N{C1})
+        {C1} = data.unit.{unit_name1}.reverse({C1})
+        {C2} = data.unit.{unit_name2}.reverse({C2})
+    probs = probs.reshape({shape})
 
     plt.pcolormesh({C1}, {C2}, probs, shading='auto')
     plt.colorbar()

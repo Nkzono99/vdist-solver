@@ -69,6 +69,16 @@ def gentemp_vdsolver2d(args, chars):
         lim_str = '0' if axis not in chars else f'(-1, 1, N{axis.upper()})'
         lim_strs.append(f'{axis}={lim_str}')
     phase_str = ',\n        '.join(lim_strs)
+    
+    shape = []
+    for axis in ['z', 'y', 'x', 'vz', 'vy', 'vx']:
+        if axis not in chars:
+            continue
+        shape.append(f'N{axis.upper()}')
+    shape_str = ', '.join(shape)
+
+    unit_name1 = 'length' if c1 in ['x', 'y', 'z'] else 'v'
+    unit_name2 = 'length' if c2 in ['x', 'y', 'z'] else 'v'
 
     new = text.format(
         C1=C1,
@@ -76,6 +86,9 @@ def gentemp_vdsolver2d(args, chars):
         i1=axises.index(c1),
         i2=axises.index(c2),
         phase=phase_str,
+        shape=shape_str,
+        unit_name1=unit_name1,
+        unit_name2=unit_name2,
     )
 
     with open(args.output, 'w', encoding='utf-8') as f:
