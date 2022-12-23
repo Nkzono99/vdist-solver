@@ -144,7 +144,7 @@ class VSolveTarget(Target):
 
 
 @dataclass
-class BackTraceTraget(Target):
+class BackTraceTarget(Target):
     sim: Simulator
     pcl_prototype: Particle
     dt: float

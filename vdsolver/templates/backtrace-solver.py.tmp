@@ -4,7 +4,7 @@ import emout
 import matplotlib.pyplot as plt
 import numpy as np
 
-from vdsolver.core import BackTraceTraget, plot_periodic
+from vdsolver.core import BackTraceTarget, plot_periodic
 from vdsolver.sims.essimulator import ChargedParticle
 from vdsolver.tools.emses import create_default_simulator
 
@@ -42,7 +42,7 @@ def main():
     # sim = create_simulator()
 
     pcl_prototype = ChargedParticle.create_prototype(q_m=data.inp.qm[args.ispec])
-    target = BackTraceTraget(sim,
+    target = BackTraceTarget(sim,
                              pcl_prototype,
                              data.inp.dt*args.dt,
                              args.istep,

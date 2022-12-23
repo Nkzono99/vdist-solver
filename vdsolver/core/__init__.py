@@ -5,4 +5,4 @@ from .boundaries import (ParallelRectangle, Plane2d, PlaneXY, PlaneYZ, PlaneZX,
                          create_simbox)
 from .plot import plot_periodic
 from .probs import MaxwellProb, MulProb, NoProb, Prob
-from .targets import BackTraceTraget, Lim, PhaseGrid, VSolveTarget
+from .targets import BackTraceTarget, Lim, PhaseGrid, VSolveTarget
