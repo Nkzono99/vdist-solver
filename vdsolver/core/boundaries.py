@@ -194,26 +194,32 @@ def create_box(xlim: Tuple[float, float],
     dy = ylim[1] - ylim[0]
     dz = zlim[1] - zlim[0]
 
+    boundaries = []
+
     if 'xl' in use_wall:
         org = np.array([xlim[0], ylim[0], zlim[0]])
         xl = RectangleX(org, dx, dy, fpdict['xl'], priority=ppdict['xl'])
+        boundaries.append(xl)
     if 'xu' in use_wall:
         org = np.array([xlim[1], ylim[0], zlim[0]])
         xu = RectangleX(org, dx, dy, fpdict['xu'], priority=ppdict['xu'])
+        boundaries.append(xu)
     if 'yl' in use_wall:
         org = np.array([xlim[0], ylim[0], zlim[0]])
         yl = RectangleY(org, dz, dx, fpdict['yl'], priority=ppdict['yl'])
+        boundaries.append(yl)
     if 'yu' in use_wall:
         org = np.array([xlim[0], ylim[1], zlim[0]])
         yu = RectangleY(org, dz, dx, fpdict['yu'], priority=ppdict['yu'])
+        boundaries.append(yu)
     if 'zl' in use_wall:
         org = np.array([xlim[0], ylim[0], zlim[0]])
         zl = RectangleZ(org, dx, dy, fpdict['zl'], priority=ppdict['zl'])
+        boundaries.append(zl)
     if 'zu' in use_wall:
         org = np.array([xlim[0], ylim[0], zlim[1]])
         zu = RectangleZ(org, dx, dy, fpdict['zu'], priority=ppdict['zu'])
+        boundaries.append(zu)
 
-    local_variables = locals()
-    boundaries = [local_variables[key] for key in use_wall]
     box = BoundaryList(boundaries)
     return box
