@@ -22,14 +22,14 @@ def gentemp_vdsolver():
         chars = [axises[:1], axises[1:]]
 
     if args.hybrid:
-        template_filepath = 'templates/vdist-solver{dim}d-hybrid.py.tmp'
+        template_filename = 'templates/vdist-solver{dim}d-hybrid.py.tmp'
     else:
-        template_filepath = 'templates/vdist-solver{dim}d.py.tmp'
+        template_filename = 'templates/vdist-solver{dim}d.py.tmp'
 
     if len(chars) == 1:
-        gentemp_vdsolver1d(args, chars, template_filepath.format(dim=1))
+        gentemp_vdsolver1d(args, chars, template_filename.format(dim=1))
     elif len(chars) == 2:
-        gentemp_vdsolver2d(args, chars, template_filepath.format(dim=2))
+        gentemp_vdsolver2d(args, chars, template_filename.format(dim=2))
 
 
 def gentemp_vdsolver1d(args, chars, template_filepath):
