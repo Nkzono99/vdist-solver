@@ -117,7 +117,6 @@ class VSolveTarget(Target):
     maxstep: int
     max_workers: int
     chunksize: int
-    istep: int
     show_progress: bool = True
     use_mpi: bool = False
 
@@ -126,8 +125,8 @@ class VSolveTarget(Target):
 
         pcls = []
         for phase in phases.reshape(-1, phases.shape[-1]):
-            pos = phase[:3]
-            vel = phase[3:]
+            pos = phase[:3].copy()
+            vel = phase[3:].copy()
             pcl = self.pcl_prototype.craete_clone(pos, vel)
             pcls.append(pcl)
 
@@ -148,7 +147,6 @@ class BackTraceTarget(Target):
     sim: Simulator
     pcl_prototype: Particle
     dt: float
-    istep: int
     position: List[float]
     velocity: List[float]
     maxstep: int

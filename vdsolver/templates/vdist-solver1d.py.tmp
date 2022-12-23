@@ -1,3 +1,9 @@
+"""Calculate and plot velocity distributions using the backtrace method.
+
+    How to run
+    ----------
+    $ python vdist-solver1d.py -d <directory> -i <ispec> -o output.png
+"""
 from argparse import ArgumentParser
 
 import emout
@@ -57,7 +63,6 @@ def main():
                           args.maxstep,
                           args.max_workers,
                           args.chunksize,
-                          args.istep,
                           show_progress=True,
                           use_mpi=args.use_mpi,
                           )
