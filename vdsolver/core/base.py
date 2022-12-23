@@ -37,6 +37,8 @@ class Particle:
             t=self.t,
         )
 
+    def craete_clone(self, pos: np.ndarray, vel: np.ndarray):
+        return Particle(pos, vel)
 
 class CollisionRecord:
     """Store collision information.

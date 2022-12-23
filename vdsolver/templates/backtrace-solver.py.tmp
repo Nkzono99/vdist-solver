@@ -3,9 +3,10 @@ from argparse import ArgumentParser
 import emout
 import matplotlib.pyplot as plt
 import numpy as np
-from vdsolver.core.plot import plot_periodic
-from vdsolver.tools.emses.targets import BackTraceTraget
-from vdsolver.tools.emses.utils import create_default_simulator
+
+from vdsolver.core import BackTraceTraget, plot_periodic
+from vdsolver.sims.essimulator import ChargedParticle
+from vdsolver.tools.emses import create_default_simulator
 
 
 def parse_args():
@@ -40,14 +41,15 @@ def main():
                                    use_si=False)
     # sim = create_simulator()
 
-    target = BackTraceTraget(data,
-                             sim,
+    pcl_prototype = ChargedParticle(np.zeros(3), np.zeros(3),
+                                    q_m=data.inp.qm[args.ispec])
+    target = BackTraceTraget(sim,
+                             pcl_prototype,
+                             data.inp.dt*args.dt,
                              args.istep,
-                             args.ispec,
                              pos,
                              vel,
                              args.maxstep,
-                             args.dt,
                              )
 
     history, prob, pcl_last = target.solve()

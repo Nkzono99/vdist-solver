@@ -3,8 +3,10 @@ from argparse import ArgumentParser
 import emout
 import matplotlib.pyplot as plt
 import numpy as np
-from vdsolver.tools.emses import VSolveTarget, PhaseGrid
-from vdsolver.tools.emses.utils import create_default_simulator
+
+from vdsolver.core import PhaseGrid, VSolveTarget
+from vdsolver.sims.essimulator import ChargedParticle
+from vdsolver.tools.emses import create_default_simulator
 
 
 def parse_args():
@@ -42,22 +44,23 @@ def main():
     )
 
     # Create simulator
-    sim = create_default_simulator(data, 
-                                   args.ispec, 
+    sim = create_default_simulator(data,
+                                   args.ispec,
                                    args.istep,
                                    use_si=False)
-    
+
     # For self-simulation
     # sim = create_simulator()
 
-    target = VSolveTarget(data,
-                          sim,
+    pcl_prototype = ChargedParticle(np.zeros(3), np.zeros(3),
+                                    q_m=data.inp.qm[args.ispec])
+    target = VSolveTarget(sim,
+                          pcl_prototype,
+                          data.inp.dt*args.dt,
                           phase_grid,
                           args.maxstep,
                           args.max_workers,
                           args.chunksize,
-                          args.ispec,
-                          args.dt,
                           args.istep,
                           show_progress=True,
                           use_mpi=args.use_mpi,

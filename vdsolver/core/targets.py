@@ -1,26 +1,11 @@
 from collections import deque
 from typing import Deque, List, Tuple, Union
 from vdsolver.core.base import Simulator
-from vdsolver.core import probs
 
-import emout
 import numpy as np
-from numpy.lib.arraysetops import isin
+from vdsolver.core import Particle
 from vdsolver.sims.essimulator import ChargedParticle, ESSimulator3d
 from dataclasses import dataclass
-
-
-@dataclass
-class Target:
-    data: emout.Emout
-    sim: ESSimulator3d
-
-    def solve(self):
-        raise NotImplementedError()
-
-    @classmethod
-    def load(cls, data: emout.Emout, sim: ESSimulator3d, targetdict: dict):
-        return cls(data, sim, **targetdict)
 
 
 @dataclass
@@ -82,6 +67,19 @@ class PhaseGrid:
         return self._lim(self.vz)
 
     def create_grid(self) -> np.ndarray:
+        """Create phase mesh grid.
+
+        Returns
+        -------
+        np.ndarray
+            Phase mesh grid
+
+        Notes
+        -----
+        Return grid[0:nz, 0:ny, 0:nx, 0:nvz, 0:nvy, 0:nvx, <axis>].
+
+        <axis> = 0: x, 1: y, 2: z, 3: vx, 4: vy, 5: vz
+        """
         x = np.linspace(*self.xlim.tolist())
         y = np.linspace(*self.ylim.tolist())
         z = np.linspace(*self.zlim.tolist())
@@ -103,15 +101,22 @@ class PhaseGrid:
 
 
 @dataclass
+class Target:
+    sim: Simulator
+
+    def solve(self):
+        raise NotImplementedError()
+
+
+@dataclass
 class VSolveTarget(Target):
-    data: emout.Emout
-    sim: ESSimulator3d
+    sim: Simulator
+    pcl_prototype: Particle
+    dt: float
     phase_grid: PhaseGrid
     maxstep: int
     max_workers: int
     chunksize: int
-    ispec: int
-    dt: float
     istep: int
     show_progress: bool = True
     use_mpi: bool = False
@@ -119,18 +124,15 @@ class VSolveTarget(Target):
     def solve(self) -> Tuple[np.ndarray, np.ndarray]:
         phases = self.phase_grid.create_grid()
 
-        dt = self.data.inp.dt * self.dt
-        q_m = self.data.inp.qm[self.ispec]
-
         pcls = []
         for phase in phases.reshape(-1, phases.shape[-1]):
             pos = phase[:3]
             vel = phase[3:]
-            pcl = ChargedParticle(pos, vel, q_m)
+            pcl = self.pcl_prototype.craete_clone(pos, vel)
             pcls.append(pcl)
 
         probs = self.sim.get_probs(pcls=pcls,
-                                   dt=dt,
+                                   dt=self.dt,
                                    max_step=self.maxstep,
                                    max_workers=self.max_workers,
                                    chunksize=self.chunksize,
@@ -143,14 +145,13 @@ class VSolveTarget(Target):
 
 @dataclass
 class BackTraceTraget(Target):
-    data: emout.Emout
-    sim: ESSimulator3d
+    sim: Simulator
+    pcl_prototype: Particle
+    dt: float
     istep: int
-    ispec: int
     position: List[float]
     velocity: List[float]
     maxstep: int
-    dt: int
 
     def solve(self) -> Tuple[Deque[ChargedParticle], float, ChargedParticle]:
         pos = np.array(self.position)
@@ -158,10 +159,8 @@ class BackTraceTraget(Target):
 
         history = deque()
 
-        dt = self.data.inp.dt * self.dt
-        q_m = self.data.inp.qm[self.ispec]
-        pcl = ChargedParticle(pos, vel, q_m)
+        pcl = self.pcl_prototype.craete_clone(pos, vel)
         prob, pcl_last = self.sim.get_prob(
-            pcl, dt, max_step=self.maxstep, history=history)
+            pcl, self.dt, max_step=self.maxstep, history=history)
 
         return history, prob, pcl_last

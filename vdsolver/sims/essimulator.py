@@ -1,8 +1,7 @@
-from concurrent import futures
-
 import numpy as np
-from tqdm import tqdm
-from vdsolver.core import *
+
+from vdsolver.core import (BoundaryList, FieldVector3d,
+                           Particle, Simulator)
 
 
 class ChargedParticle(Particle):
@@ -13,6 +12,9 @@ class ChargedParticle(Particle):
                  periodic: bool = False):
         super().__init__(pos, vel, t=t, periodic=periodic)
         self.q_m = q_m
+
+    def craete_clone(self, pos: np.ndarray, vel: np.ndarray):
+        return ChargedParticle(pos, vel, self.q_m)
 
 
 class ESSimulator3d(Simulator):
