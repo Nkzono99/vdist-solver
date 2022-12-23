@@ -7,7 +7,7 @@ from vdsolver.core.base import BoundaryList, FieldScalar, SimpleFieldVector3d
 from vdsolver.core.boundaries import (PlaneXY, RectangleX, RectangleY,
                                       RectangleZ, create_simbox)
 from vdsolver.core.probs import MaxwellProb, NoProb
-from vdsolver.sims import ESSimulator3d
+from vdsolver.sims.essimulator import ESSimulator3d
 
 
 def create_innner_boundaries(data: emout.Emout, use_si: bool):
@@ -147,7 +147,7 @@ def create_default_simulator(
     -------
     ESSimulator3d
         3D Electric Static Simulator with reference to the the parameter file for EMSES
-    """    
+    """
     # Basic parameters
     nx, ny, nz = data.inp.nx, data.inp.ny, data.inp.nz
     dx = 1.0
@@ -242,7 +242,7 @@ def create_default_pe_simulator(
         istep: int = -1,
         use_si=False,
         use_hole: bool = None,
-        dx: float = 1.0) -> ESSimulator3d:    
+        dx: float = 1.0) -> ESSimulator3d:
     # Basic parameters
     nx, ny, nz = data.inp.nx, data.inp.ny, data.inp.nz
     path = data.inp.path[ispec]
