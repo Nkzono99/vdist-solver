@@ -130,4 +130,5 @@ dmypy.json
 
 # Temporary test scripts
 vdist-solver.py
+backtrace-solver.py
 test.py
