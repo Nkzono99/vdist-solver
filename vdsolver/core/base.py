@@ -4,8 +4,6 @@ from typing import Any, Callable, List, Tuple
 import numpy as np
 from tqdm import tqdm
 
-from vdsolver.core.probs import NoProb
-
 
 class Particle:
     """The Particle in the phase space.
@@ -39,6 +37,14 @@ class Particle:
             t=self.t,
         )
 
+    @classmethod
+    def create_prototype(cls, *args, **kwargs):
+        pos = np.zeros(3)
+        vel = np.zeros(3)
+        return cls(pos, vel, *args, **kwargs)
+
+    def craete_clone(self, pos: np.ndarray, vel: np.ndarray):
+        return Particle(pos, vel)
 
 class CollisionRecord:
     """Store collision information.

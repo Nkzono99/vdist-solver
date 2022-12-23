@@ -3,3 +3,4 @@ matplotlib
 emout
 tqdm
 scipy
+Deprecated

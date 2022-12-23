@@ -1,6 +1,8 @@
 from typing import List
-from .base import Particle
+
 import matplotlib.pyplot as plt
+
+from .base import Particle
 
 
 def plot_periodic(history: List[Particle], idxs=[0, 2]):
