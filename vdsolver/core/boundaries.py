@@ -133,8 +133,9 @@ def create_simbox(xlim: Tuple[float, float],
                   ylim: Tuple[float, float],
                   zlim: Tuple[float, float],
                   func_prob_default: Callable[[np.ndarray], float],
-                  func_prob_dict: Dict[str, Callable[[np.ndarray], float]]={},
-                  priority_prob_dict: Dict[str, int]={},
+                  func_prob_dict: Dict[str,
+                                       Callable[[np.ndarray], float]] = {},
+                  priority_prob_dict: Dict[str, int] = {},
                   use_wall: List[str] = None,
                   ) -> BoundaryList:
     if use_wall is None:
@@ -147,21 +148,26 @@ def create_simbox(xlim: Tuple[float, float],
     for key, value in priority_prob_dict.items():
         ppdict[key] = value
 
+    boundaries = []
     if 'xl' in use_wall:
         xl = PlaneXY(xlim[0], fpdict['xl'], priority=ppdict['xl'])
+        boundaries.append(xl)
     if 'xu' in use_wall:
         xu = PlaneXY(xlim[1], fpdict['xu'], priority=ppdict['xu'])
+        boundaries.append(xu)
     if 'yl' in use_wall:
         yl = PlaneXY(ylim[0], fpdict['yl'], priority=ppdict['yl'])
+        boundaries.append(yl)
     if 'yu' in use_wall:
         yu = PlaneXY(ylim[1], fpdict['yu'], priority=ppdict['yu'])
+        boundaries.append(yu)
     if 'zl' in use_wall:
         zl = PlaneXY(zlim[0], fpdict['zl'], priority=ppdict['zl'])
+        boundaries.append(zl)
     if 'zu' in use_wall:
         zu = PlaneXY(zlim[1], fpdict['zu'], priority=ppdict['zu'])
+        boundaries.append(zu)
 
-    local_variables = locals()
-    boundaries = [local_variables[key] for key in use_wall]
     box = BoundaryList(boundaries)
     return box
 
