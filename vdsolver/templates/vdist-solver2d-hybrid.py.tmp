@@ -6,6 +6,7 @@
 """
 from argparse import ArgumentParser
 from pathlib import Path
+import pickle as pkl
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -77,15 +78,24 @@ def main():
     )
 
     # Create simulator
-    sim = create_simulation_for_hybrid(Path(args.directory),
-                                       index=args.index,
-                                       dx=dx,
-                                       vth=vth,
-                                       vdri=vdri,
-                                       n0=n0,
-                                       coef_ef=coef_ef,
-                                       coef_bf=coef_bf,
-                                       )
+    pkl_name = f'{args.name}-{args.ispec}.pkl'
+    if args.name and Path(pkl_name).exists():
+        with open(pkl_name, 'rb') as f:
+            sim = pkl.load(f)
+    else:
+        sim = create_simulation_for_hybrid(Path(args.directory),
+                                        index=args.index,
+                                        dx=dx,
+                                        vth=vth,
+                                        vdri=vdri,
+                                        n0=n0,
+                                        coef_ef=coef_ef,
+                                        coef_bf=coef_bf,
+                                        )
+        # sim = create_simulator()
+        if args.name:
+            with open(pkl_name, 'wb') as f:
+                pkl.dump(sim, f)
     # sim = create_simulator()
 
     # Solve velocity distribution.
