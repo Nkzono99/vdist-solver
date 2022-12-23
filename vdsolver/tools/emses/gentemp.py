@@ -7,6 +7,7 @@ def parse_args_vdsolver():
 
     parser.add_argument('axises', default='xz')
     parser.add_argument('--output', '-o', default='vdist-solver.py')
+    parser.add_argument('--hybrid', '-hybrid', action='store_true')
 
     return parser.parse_args()
 
@@ -20,18 +21,22 @@ def gentemp_vdsolver():
     else:
         chars = [axises[:1], axises[1:]]
 
+    if args.hybrid:
+        template_filepath = 'templates/vdist-solver{dim}d-hybrid.py.tmp'
+    else:
+        template_filepath = 'templates/vdist-solver{dim}d.py.tmp'
+
     if len(chars) == 1:
-        gentemp_vdsolver1d(args, chars)
+        gentemp_vdsolver1d(args, chars, template_filepath.format(dim=1))
     elif len(chars) == 2:
-        gentemp_vdsolver2d(args, chars)
+        gentemp_vdsolver2d(args, chars, template_filepath.format(dim=2))
 
 
-def gentemp_vdsolver1d(args, chars):
+def gentemp_vdsolver1d(args, chars, template_filepath):
     c1,  = chars
     C1 = c1.upper()
 
-    filepath = Path(__file__).parent.parent.parent / \
-        'templates/vdist-solver1d.py.tmp'
+    filepath = Path(__file__).parent.parent.parent / template_filepath
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 
@@ -53,12 +58,11 @@ def gentemp_vdsolver1d(args, chars):
         f.write(new)
 
 
-def gentemp_vdsolver2d(args, chars):
+def gentemp_vdsolver2d(args, chars, template_filepath):
     c1, c2 = chars
     C1, C2 = c1.upper(), c2.upper()
 
-    filepath = Path(__file__).parent.parent.parent / \
-        'templates/vdist-solver2d.py.tmp'
+    filepath = Path(__file__).parent.parent.parent / template_filepath
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 
@@ -69,7 +73,7 @@ def gentemp_vdsolver2d(args, chars):
         lim_str = '0' if axis not in chars else f'(-1, 1, N{axis.upper()})'
         lim_strs.append(f'{axis}={lim_str}')
     phase_str = ',\n        '.join(lim_strs)
-    
+
     shape = []
     for axis in ['z', 'y', 'x', 'vz', 'vy', 'vx']:
         if axis not in chars:
