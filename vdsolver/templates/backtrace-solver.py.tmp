@@ -37,8 +37,7 @@ def main():
 
     # Create simulator
     sim = create_default_simulator(data, args.ispec, args.istep,
-                                   use_si=False,
-                                   use_hole=True)
+                                   use_si=False)
     # sim = create_simulator()
 
     target = BackTraceTraget(data,

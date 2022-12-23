@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from vdsolver.tools.emses import VSolveTarget, PhaseGrid
 from vdsolver.tools.emses.utils import create_default_simulator
-from vdsolver.tools.emses.utils import create_default_pe_simulator
 
 
 def parse_args():
@@ -43,13 +42,7 @@ def main():
 
     # Create simulator
     sim = create_default_simulator(data, args.ispec, args.istep,
-                                   use_si=False,
-                                   use_hole=True)
-
-    # For photoelectron simulation
-    # sim = create_default_pe_simulator(data, args.ispec, args.istep,
-    #                                use_si=False,
-    #                                use_hole=True)
+                                   use_si=False)
 
     # For self-simulation
     # sim = create_simulator()
