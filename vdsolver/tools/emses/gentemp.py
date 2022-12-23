@@ -104,6 +104,7 @@ def parse_args_backtrace():
 
     parser.add_argument('axises', default='xz')
     parser.add_argument('--output', '-o', default='backtrace-solver.py')
+    parser.add_argument('--hybrid', '-hybrid', action='store_true')
 
     return parser.parse_args()
 
@@ -115,8 +116,12 @@ def gentemp_backtrace():
     c1, c2 = chars
     C1, C2 = c1.upper(), c2.upper()
 
-    filepath = Path(__file__).parent.parent.parent / \
-        'templates/backtrace-solver.py.tmp'
+    if args.hybrid:
+        template_filename = 'templates/backtrace-solver-hybrid.py.tmp'
+    else:
+        template_filename = 'templates/backtrace-solver.py.tmp'
+
+    filepath = Path(__file__).parent.parent.parent / template_filename
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 
