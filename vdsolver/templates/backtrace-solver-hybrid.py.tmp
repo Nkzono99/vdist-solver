@@ -22,11 +22,12 @@ def parse_args():
 
     parser.add_argument('--directory', '-d', default='./')
     parser.add_argument('--index', '-index', default=105)
+
     parser.add_argument('--ispec', '-i', default=0, type=int)
 
     parser.add_argument('--dt', '-dt', default=1.0, type=float)
     parser.add_argument('--maxstep', '-ms', default=10000, type=int)
-    parser.add_argument('--use_si', action='store_true')
+
     parser.add_argument('--output', '-o', default=None)
 
     return parser.parse_args()
@@ -70,7 +71,7 @@ def main():
     vel = np.array([0, 0, 0])
 
     # Create simulator
-    pkl_name = f'{args.name}-{args.ispec}.pkl'
+    pkl_name = args.name+'-'+'args.ispec'+'.pkl'
     if args.name and Path(pkl_name).exists():
         with open(pkl_name, 'rb') as f:
             sim = pkl.load(f)
