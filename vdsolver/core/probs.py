@@ -1,7 +1,7 @@
-import numpy as np
-from numpy.lib.arraysetops import isin
-from scipy.stats import norm
 from copy import deepcopy
+
+import numpy as np
+from scipy.stats import norm
 
 
 class Prob:

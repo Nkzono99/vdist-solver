@@ -4,8 +4,6 @@ from typing import Any, Callable, List, Tuple
 import numpy as np
 from tqdm import tqdm
 
-from vdsolver.core.probs import NoProb
-
 
 class Particle:
     """The Particle in the phase space.
