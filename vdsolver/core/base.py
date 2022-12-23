@@ -37,6 +37,12 @@ class Particle:
             t=self.t,
         )
 
+    @classmethod
+    def create_prototype(cls, *args, **kwargs):
+        pos = np.zeros(3)
+        vel = np.zeros(3)
+        return cls(pos, vel, *args, **kwargs)
+
     def craete_clone(self, pos: np.ndarray, vel: np.ndarray):
         return Particle(pos, vel)
 

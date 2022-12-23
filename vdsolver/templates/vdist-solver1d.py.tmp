@@ -49,8 +49,7 @@ def main():
     # For self-simulation
     # sim = create_simulator()
 
-    pcl_prototype = ChargedParticle(np.zeros(3), np.zeros(3),
-                                    q_m=data.inp.qm[args.ispec])
+    pcl_prototype = ChargedParticle.create_prototype(q_m=data.inp.qm[args.ispec])
     target = VSolveTarget(sim,
                           pcl_prototype,
                           data.inp.dt*args.dt,

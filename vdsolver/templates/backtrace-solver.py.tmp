@@ -41,8 +41,7 @@ def main():
                                    use_si=False)
     # sim = create_simulator()
 
-    pcl_prototype = ChargedParticle(np.zeros(3), np.zeros(3),
-                                    q_m=data.inp.qm[args.ispec])
+    pcl_prototype = ChargedParticle.create_prototype(q_m=data.inp.qm[args.ispec])
     target = BackTraceTraget(sim,
                              pcl_prototype,
                              data.inp.dt*args.dt,
