@@ -17,6 +17,7 @@ setup(
     author='Nkzono99',
     author_email='210x218x@gsuite.stu.kobe-u.ac.jp',
     url='https://github.com/Nkzono99/vdist-solver',
+    package_dir={'': 'vdsolver'},
     packages=find_packages(),
     entry_points={
         'console_scripts': [
