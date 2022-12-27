@@ -12,7 +12,7 @@ setup(
     description='Velocity distribution function solver using Liouville\'s theorem',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    version='0.5.1',
+    version='0.5.2',
     install_requires=_require_packages('requirements.txt'),
     author='Nkzono99',
     author_email='210x218x@gsuite.stu.kobe-u.ac.jp',
