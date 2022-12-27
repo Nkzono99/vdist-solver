@@ -2,31 +2,33 @@
 
     How to run
     ----------
-    $ python vdist-solver2d.py -d <directory> -i <ispec> -o output.png
+    $ python vdist-solver2d.py -d <directory> -index <index> -i <ispec> -o output.png
 """
 from argparse import ArgumentParser
+from pathlib import Path
+import pickle as pkl
 
-import emout
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.constants as cn
 
 from vdsolver.core import PhaseGrid, VSolveTarget
 from vdsolver.sims.essimulator import ChargedParticle
-from vdsolver.tools.emses import create_default_simulator
+from vdsolver.tools.hybrid import create_simulation_for_hybrid
 
 
 def parse_args():
     parser = ArgumentParser()
 
     parser.add_argument('--directory', '-d', default='./')
-    parser.add_argument('--istep', '-is', default=-1, type=int)
+    parser.add_argument('--index', '-index', default=105, type=int)
+
+    parser.add_argument('--name', '-name', default=None)
 
     parser.add_argument('--ispec', '-i', default=0, type=int)
 
     parser.add_argument('--dt', '-dt', default=1.0, type=float)
     parser.add_argument('--maxstep', '-ms', default=10000, type=int)
-
-    parser.add_argument('--use_si', action='store_true')
 
     parser.add_argument('--output', '-o', default=None)
 
@@ -46,8 +48,32 @@ def create_simulator(*args, **kwargs):
 def main():
     args = parse_args()
 
-    data = emout.Emout(args.directory)
+    # Set up general simulation parameters.
+    dx = 1.0
+    dt = 1.0*args.dt
+    coef_ef = 1.0
+    coef_bf = 1.0
 
+    # Set up plasma particle parameters.
+    if args.ispec == 0:  # for electron
+        q = -cn.e
+        m = cn.m_e
+        T = 1e5
+        vth = np.sqrt(cn.k*T/m)
+        vdri = 1e6
+        n0 = 1.0
+
+    elif args.ispec == 1:  # for ion
+        q = cn.e
+        m = cn.m_e*1836.15
+        T = 1e5
+        vth = np.sqrt(cn.k*T/m)
+        vdri = 1e6
+        n0 = 1.0
+
+    q_m = q/m
+
+    # Set up a phase space grid paramters.
     N{C1} = 100
     N{C2} = 100
 
@@ -56,18 +82,30 @@ def main():
     )
 
     # Create simulator
-    sim = create_default_simulator(data,
-                                   args.ispec,
-                                   args.istep,
-                                   use_si=False)
+    pkl_name = args.name+'-'+'args.ispec'+'.pkl'
+    if args.name and Path(pkl_name).exists():
+        with open(pkl_name, 'rb') as f:
+            sim = pkl.load(f)
+    else:
+        sim = create_simulation_for_hybrid(Path(args.directory),
+                                           index=args.index,
+                                           dx=dx,
+                                           vth=vth,
+                                           vdri=vdri,
+                                           n0=n0,
+                                           coef_ef=coef_ef,
+                                           coef_bf=coef_bf,
+                                           )
+        # sim = create_simulator()
+        if args.name:
+            with open(pkl_name, 'wb') as f:
+                pkl.dump(sim, f)
 
-    # For self-simulation
-    # sim = create_simulator()
-
-    pcl_prototype = ChargedParticle.create_prototype(q_m=data.inp.qm[args.ispec])
+    # Solve velocity distribution.
+    pcl_prototype = ChargedParticle.create_prototype(q_m)
     target = VSolveTarget(sim,
                           pcl_prototype,
-                          data.inp.dt*args.dt,
+                          dt,
                           phase_grid,
                           args.maxstep,
                           args.max_workers,
@@ -78,14 +116,13 @@ def main():
 
     phases, probs = target.solve()
 
+    # Prepare data for visualisation.
     phases = phases.reshape({shape}, 6)
     {C1} = phases[:, :, {i1}]
     {C2} = phases[:, :, {i2}]
-    if args.use_si:
-        {C1} = data.unit.{unit_name1}.reverse({C1})
-        {C2} = data.unit.{unit_name2}.reverse({C2})
     probs = probs.reshape({shape})
 
+    # Plot velocity distribution.
     plt.pcolormesh({C1}, {C2}, probs, shading='auto')
     plt.colorbar()
     plt.xlabel('{C1}')

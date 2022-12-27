@@ -1,0 +1,118 @@
+"""Calculate and plot particle orbit using the backtrace method.
+
+    How to run
+    ----------
+    $ python backtrace-solver.py -d <directory> -i <ispec> -o output.png
+"""
+import pickle as pkl
+from argparse import ArgumentParser
+from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.constants as cn
+
+from vdsolver.core import BackTraceTarget, plot_periodic
+from vdsolver.sims.essimulator import ChargedParticle
+from vdsolver.tools.hybrid import create_simulation_for_hybrid
+
+
+def parse_args():
+    parser = ArgumentParser()
+
+    parser.add_argument('--directory', '-d', default='./')
+    parser.add_argument('--index', '-index', default=105, type=int)
+
+    parser.add_argument('--name', '-name', default=None)
+
+    parser.add_argument('--ispec', '-i', default=0, type=int)
+
+    parser.add_argument('--dt', '-dt', default=1.0, type=float)
+    parser.add_argument('--maxstep', '-ms', default=10000, type=int)
+
+    parser.add_argument('--output', '-o', default=None)
+
+    return parser.parse_args()
+
+
+def create_simulator(*args, **kwargs):
+    sim = None
+    return sim
+
+
+def main():
+    args = parse_args()
+
+    # Set up general simulation parameters.
+    dx = 6.225e4
+    dt = 1.0e-3*args.dt
+    coef_ef = 159292.584e-8
+    coef_bf = 2.0e-8
+
+    # Set up plasma particle parameters.
+    if args.ispec == 0:  # for electron
+        q = -cn.e
+        m = cn.m_e
+        T = 2.5e5
+        vth = np.sqrt(cn.k*T/m)
+        vdri = 400.0e3
+        n0 = 3.0e7
+
+    elif args.ispec == 1:  # for ion
+        q = cn.e
+        m = cn.m_e*1836.15
+        T = 2.5e5
+        vth = np.sqrt(cn.k*T/m)
+        vdri = 400.0e3
+        n0 = 3.0e7
+
+    q_m = q/m
+
+    # Set up a position and velocity to solve.
+    pos = np.array([0, 0, 0])
+    vel = np.array([0, 0, 0])
+
+    # Create simulator
+    pkl_name = args.name+'-'+'args.ispec'+'.pkl'
+    if args.name and Path(pkl_name).exists():
+        with open(pkl_name, 'rb') as f:
+            sim = pkl.load(f)
+    else:
+        sim = create_simulation_for_hybrid(Path(args.directory),
+                                        index=args.index,
+                                        dx=dx,
+                                        vth=vth,
+                                        vdri=vdri,
+                                        n0=n0,
+                                        coef_ef=coef_ef,
+                                        coef_bf=coef_bf,
+                                        )
+        # sim = create_simulator()
+        if args.name:
+            with open(pkl_name, 'wb') as f:
+                pkl.dump(sim, f)
+
+    # Solve velocity distribution.
+    pcl_prototype = ChargedParticle.create_prototype(q_m)
+    target = BackTraceTarget(sim,
+                             pcl_prototype,
+                             dt,
+                             pos,
+                             vel,
+                             args.maxstep,
+                             )
+
+    history, prob, pcl_last = target.solve()
+
+    plot_periodic(history, idxs=[{i1}, {i2}])
+    plt.xlabel('{C1}')
+    plt.ylabel('{C2}')
+
+    if args.output is None:
+        plt.show()
+    else:
+        plt.gcf().savefig(args.output)
+
+
+if __name__ == '__main__':
+    main()
