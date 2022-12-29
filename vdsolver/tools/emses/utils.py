@@ -75,7 +75,9 @@ def create_emmision_surf(data: emout.Emout, ispec: int, use_si: bool, priority: 
         for nepl in data.inp.nepl:
             nepls.append(nepl)
 
-        for iepl in range(np.sum(nepls[:ispec]), np.sum(nepls[:ispec+1])):
+        iepl_start = int(np.sum(nepls[:ispec]))
+        iepl_end = int(np.sum(nepls[:ispec+1]))
+        for iepl in range(iepl_start, iepl_end):
             nemd = data.inp.nemd[iepl]
             xmine = data.inp.xmine[iepl]
             xmaxe = data.inp.xmaxe[iepl]
@@ -189,7 +191,7 @@ def create_default_simulator(
         bz = FieldScalar(bz_data, dx, offsets=(0.5*dx, 0.5*dx, 0.0))
         bf = SimpleFieldVector3d(bx, by, bz)
     except Exception:
-        def bf(pos): return np.zeros(3, dtype=float)
+        bf = None
 
     # Velocity distribution
     qe = data.unit.qe.to_unit

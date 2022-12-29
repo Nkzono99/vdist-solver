@@ -32,7 +32,7 @@ class ESSimulator3d(Simulator):
         self.nz = nz
         self.dx = dx
         self.ef = ef
-        self.bf = bf if bf else lambda pos: np.zeros(3)
+        self.bf = bf
 
     def _apply_boundary(self, pcl: Particle) -> Particle:
         px, py, pz = pcl.pos
@@ -46,23 +46,26 @@ class ESSimulator3d(Simulator):
     def _backward(self, pcl: ChargedParticle, dt: float) -> ChargedParticle:
         pos_new = pcl.pos - dt * pcl.vel
 
+        if self.bf:
         # Update velocity by Buneman-Boris.
-        mdt2 = -0.5*dt
-        bf = self.bf(pcl.pos)
-        ef = self.ef(pcl.pos)
+            mdt2 = -0.5*dt
+            bf = self.bf(pcl.pos)
+            ef = self.ef(pcl.pos)
 
-        t = bf*pcl.q_m*mdt2
-        s = 2*t/(1 + t**2)
+            t = bf*pcl.q_m*mdt2
+            s = 2*t/(1 + t**2)
 
-        # Accerarate by e-field
-        upm = pcl.vel + pcl.q_m*ef*mdt2
+            # Accerarate by e-field
+            upm = pcl.vel + pcl.q_m*ef*mdt2
 
-        # Rotate by b-field
-        upa = upm + np.cross(upm, t)
-        upp = upm + np.cross(upa, s)
+            # Rotate by b-field
+            upa = upm + np.cross(upm, t)
+            upp = upm + np.cross(upa, s)
 
-        # Accerarate by e-field
-        vel_new = upp + pcl.q_m*ef*mdt2
+            # Accerarate by e-field
+            vel_new = upp + pcl.q_m*ef*mdt2
+        else:
+            vel_new = pcl.vel - dt * pcl.q_m * self.ef(pcl.pos)
 
         # Create new particle.
         t_new = pcl.t + dt
