@@ -189,7 +189,7 @@ def create_default_simulator(
         bz = FieldScalar(bz_data, dx, offsets=(0.5*dx, 0.5*dx, 0.0))
         bf = SimpleFieldVector3d(bx, by, bz)
     except Exception:
-        def bf(pos): return np.zeros(3, dtype=float)
+        bf = None
 
     # Velocity distribution
     qe = data.unit.qe.to_unit
