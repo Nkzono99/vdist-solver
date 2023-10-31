@@ -36,7 +36,7 @@ def gentemp_vdsolver1d(args, chars, template_filepath):
     c1,  = chars
     C1 = c1.upper()
 
-    filepath = Path(__file__).parent.parent.parent / template_filepath
+    filepath = Path(__file__).parent.parent / template_filepath
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 
@@ -62,7 +62,7 @@ def gentemp_vdsolver2d(args, chars, template_filepath):
     c1, c2 = chars
     C1, C2 = c1.upper(), c2.upper()
 
-    filepath = Path(__file__).parent.parent.parent / template_filepath
+    filepath = Path(__file__).parent.parent / template_filepath
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 
@@ -121,7 +121,7 @@ def gentemp_backtrace():
     else:
         template_filename = 'templates/backtrace-solver.py.tmp'
 
-    filepath = Path(__file__).parent.parent.parent / template_filename
+    filepath = Path(__file__).parent.parent / template_filename
     with open(filepath, 'r', encoding='utf-8') as f:
         text = f.read()
 

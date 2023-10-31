@@ -21,7 +21,9 @@ def parse_args():
     parser = ArgumentParser()
 
     parser.add_argument('--directory', '-d', default='./')
-    parser.add_argument('--index', '-index', default=105)
+    parser.add_argument('--index', '-index', default=105, type=int)
+
+    parser.add_argument('--name', '-name', default=None)
 
     parser.add_argument('--ispec', '-i', default=0, type=int)
 
@@ -98,7 +100,6 @@ def main():
         if args.name:
             with open(pkl_name, 'wb') as f:
                 pkl.dump(sim, f)
-    # sim = create_simulator()
 
     # Solve velocity distribution.
     pcl_prototype = ChargedParticle.create_prototype(q_m)
