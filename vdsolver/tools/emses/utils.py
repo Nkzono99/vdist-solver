@@ -75,7 +75,7 @@ def create_emmision_surf(data: emout.Emout, ispec: int, use_si: bool, priority: 
         for nepl in data.inp.nepl:
             nepls.append(nepl)
 
-        for iepl in range(np.sum(nepls[:ispec]), np.sum(nepls[:ispec+1])):
+        for iepl in range(np.sum(nepls[:ispec], dtype=int), np.sum(nepls[:ispec+1], dtype=int)):
             nemd = data.inp.nemd[iepl]
             xmine = data.inp.xmine[iepl]
             xmaxe = data.inp.xmaxe[iepl]
