@@ -43,7 +43,9 @@ vdist-solverは、Pythonで粒子軌道及び任意の位相密度分布を取�
 
 ## インストール方法
 
-以下のコマンドを実行し。
+以下のコマンドを実行する。
+
+注意: Python3.7系未満での動作はテストしていません。 もし上手く動作しなければ、pythonのバージョンをアップグレードしてください。
 
 ```
 pip install git+https://github.com/Nkzono99/vdist-solver.git
