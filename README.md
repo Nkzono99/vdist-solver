@@ -30,3 +30,6 @@ pip install git+https://github.com/Nkzono99/vdist-solver.git
 > vim backtrace-solver.py  # Change settings
 > python backtrace-solver.py -d "<directory>"  # Plot backtrace-orbit of particle
 ```
+
+A detailed description is provided below 
+- [Get Started (Japanese)](/GetStarted_Japanese.md).
