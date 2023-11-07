@@ -15,7 +15,7 @@ Velocity distribution function solver using Liouville's theorem
 
 ## Installation
 ```
-pip install git+https://github.com/Nkzono99/vdist-solver.git
+pip install vdist-solver
 ```
 
 ## Simple Usage for EMSES
