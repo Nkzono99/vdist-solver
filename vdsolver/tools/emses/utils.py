@@ -202,7 +202,11 @@ def create_default_simulator(
     if use_si:
         n0 = data.unit.n.reverse(n0)
 
-    vdist = MaxwellProb((0, 0, vdri), (path, path, path))*n0
+    vbulk = (vdri*np.sin(np.deg2rad(data.inp.vdthz[ispec]))*np.cos(np.deg2rad(data.inp.vdthxy[ispec])),
+             vdri*np.sin(np.deg2rad(data.inp.vdthz[ispec]))*np.sin(np.deg2rad(data.inp.vdthxy[ispec])),
+             vdri*np.cos(np.deg2rad(data.inp.vdthz[ispec])))
+
+    vdist = MaxwellProb(vbulk, (path, path, path))*n0
     noprob = NoProb()
 
     # Boundaries
