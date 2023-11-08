@@ -17,6 +17,9 @@ class Lim:
     @classmethod
     def create(cls, val: float):
         return Lim(val, val, 1)
+    
+    def delta(self) -> float:
+        return (self.end - self.start) / float(self.num)
 
     def tolist(self):
         return [self.start, self.end, self.num]
@@ -65,6 +68,30 @@ class PhaseGrid:
     @property
     def vzlim(self) -> Lim:
         return self._lim(self.vz)
+
+    @property
+    def dx(self) -> float:
+        return self.xlim.delta
+
+    @property
+    def dy(self) -> float:
+        return self.ylim.delta
+
+    @property
+    def dz(self) -> float:
+        return self.zlim.delta
+
+    @property
+    def dvx(self) -> float:
+        return self.vxlim.delta
+
+    @property
+    def dvy(self) -> float:
+        return self.vylim.delta
+
+    @property
+    def dvz(self) -> float:
+        return self.vzlim.delta
 
     def create_grid(self) -> np.ndarray:
         """Create phase mesh grid.
