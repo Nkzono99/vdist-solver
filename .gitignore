@@ -132,3 +132,5 @@ dmypy.json
 vdist-solver.py
 backtrace-solver.py
 test.py
+
+old/
