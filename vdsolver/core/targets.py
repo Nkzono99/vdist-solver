@@ -18,6 +18,7 @@ class Lim:
     def create(cls, val: float):
         return Lim(val, val, 1)
     
+    @property
     def delta(self) -> float:
         return (self.end - self.start) / float(self.num)
 

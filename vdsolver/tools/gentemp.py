@@ -16,6 +16,23 @@ def gentemp_vdsolver():
     args = parse_args_vdsolver()
 
     axises: str = args.axises
+
+    if axises == 'current':
+        if args.hybrid:
+            print('Option \'-hybrid\' is not supported when current is specified')
+            return
+
+        gentemp_vdsolver_current(args, 'templates/vdist-solver-current.py.tmp')
+        return
+
+    if axises == 'density':
+        if args.hybrid:
+            print('Option \'-hybrid\' is not supported when density is specified')
+            return
+
+        gentemp_vdsolver_density(args, 'templates/vdist-solver-density.py.tmp')
+        return
+
     if axises.startswith('v'):
         chars = [axises[:2], axises[2:]]
     else:
@@ -30,6 +47,24 @@ def gentemp_vdsolver():
         gentemp_vdsolver1d(args, chars, template_filename.format(dim=1))
     elif len(chars) == 2:
         gentemp_vdsolver2d(args, chars, template_filename.format(dim=2))
+
+
+def gentemp_vdsolver_current(args, template_filepath):
+    filepath = Path(__file__).parent.parent / template_filepath
+    with open(filepath, 'r', encoding='utf-8') as f:
+        text = f.read()
+
+    with open(args.output, 'w', encoding='utf-8') as f:
+        f.write(text)
+
+
+def gentemp_vdsolver_density(args, template_filepath):
+    filepath = Path(__file__).parent.parent / template_filepath
+    with open(filepath, 'r', encoding='utf-8') as f:
+        text = f.read()
+
+    with open(args.output, 'w', encoding='utf-8') as f:
+        f.write(text)
 
 
 def gentemp_vdsolver1d(args, chars, template_filepath):

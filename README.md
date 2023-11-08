@@ -32,4 +32,4 @@ pip install vdist-solver
 ```
 
 A detailed description is provided below 
-- [Get Started (Japanese)](/GetStarted_Japanese.md).
+- [Get Started (Japanese)](/readme/GetStarted_Japanese.md).
