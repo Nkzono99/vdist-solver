@@ -56,10 +56,7 @@ def main():
     )
 
     # Create simulator
-    sim = create_default_simulator(data,
-                                   args.ispec,
-                                   args.istep,
-                                   use_si=False)
+    sim = create_default_simulator(data, args.ispec, args.istep)
 
     # For self-simulation
     # sim = create_simulator()

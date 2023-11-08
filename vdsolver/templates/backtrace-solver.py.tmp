@@ -47,8 +47,7 @@ def main():
     vel = np.array([0, 0, 0])
 
     # Create simulator
-    sim = create_default_simulator(data, args.ispec, args.istep,
-                                   use_si=False)
+    sim = create_default_simulator(data, args.ispec, args.istep)
     # sim = create_simulator()
 
     pcl_prototype = ChargedParticle.create_prototype(q_m=data.inp.qm[args.ispec])
