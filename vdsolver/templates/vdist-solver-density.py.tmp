@@ -1,0 +1,188 @@
+"""Calculate the density from velocity distributions using the backtrace method.
+
+    How to run
+    ----------
+    $ python vdist-solver-for-density.py -d <directory> -i <ispec>
+"""
+from argparse import ArgumentParser
+
+import emout
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.constants as cn
+from scipy import integrate
+from vdsolver.core import PhaseGrid, VSolveTarget
+from vdsolver.sims.essimulator import ChargedParticle
+from vdsolver.tools.emses import create_default_simulator
+
+
+def parse_args():
+    parser = ArgumentParser()
+
+    parser.add_argument('--directory', '-d', default='./')
+    parser.add_argument('--istep', '-is', default=-1, type=int)
+
+    parser.add_argument('--ispec', '-i', default=0, type=int)
+
+    parser.add_argument('--dt', '-dt', default=1.0, type=float)
+    parser.add_argument('--maxstep', '-ms', default=10000, type=int)
+
+    parser.add_argument('--use_si', action='store_true')
+
+    parser.add_argument('--show', '-show', action='store_true')
+    parser.add_argument('--output', '-o', default=None)
+
+    parser.add_argument('--max_workers', '-mw', default=8, type=int)
+    parser.add_argument('--chunksize', '-chk', default=100, type=int)
+
+    parser.add_argument('--use_mpi', '-mpi', action='store_true')
+
+    return parser.parse_args()
+
+
+def create_simulator(*args, **kwargs):
+    sim = None
+    return sim
+
+
+def integrate3d(array3d: np.ndarray, dx: float, dy: float, dz: float):
+    ret = integrate.simpson(array3d, dx=dx, axis=2)
+    ret = integrate.simpson(ret, dx=dy, axis=1)
+    ret = integrate.simpson(ret, dx=dz, axis=0)
+    return ret
+
+
+def calculate_density_from_vdist(data: emout.Emout,
+                                 ispec: int,
+                                 probs: np.ndarray,
+                                 dvx: float,
+                                 dvy: float,
+                                 dvz: float) -> float:
+    qe = data.unit.q.trans(cn.e)
+    me = data.unit.m.trans(cn.m_e)
+    m = me / data.inp.qm[ispec]
+    wp = np.array(data.inp.wp[ispec])
+    n0 = np.abs(wp**2*m/qe**2)
+
+    n0_si = data.unit.n.reverse(n0)
+
+    density_cc = n0_si*integrate3d(probs, dvx, dvy, dvz)*1e-6
+
+    return density_cc
+
+
+def calculate_density_from_simulation(data, ispec, phase_grid) -> float:
+    ix = int(phase_grid.xlim.start)
+    iy = int(phase_grid.ylim.start)
+    iz = int(phase_grid.zlim.start)
+
+    density_cc = getattr(data, f'nd{ispec+1}p')[-1, iz, iy, ix:ix+1].val_si[0]
+
+    return density_cc
+
+
+def plot_vdist(VX: np.ndarray, VY: np.ndarray, VZ: np.ndarray, probs: np.ndarray):
+    NVZ, NVY, NVX = probs.shape
+
+    plt.subplot(1, 3, 1)
+    plt.pcolormesh(VX[NVZ//2, :, :], VY[NVZ//2, :, :],
+                   probs[NVZ//2, :, :], shading='auto')
+    plt.colorbar()
+    plt.xlabel('VX')
+    plt.ylabel('VY')
+
+    plt.subplot(1, 3, 2)
+    plt.pcolormesh(VX[:, NVY//2, :], VZ[:, NVY//2, :],
+                   probs[:, NVY//2, :], shading='auto')
+    plt.colorbar()
+    plt.xlabel('VX')
+    plt.ylabel('VZ')
+
+    plt.subplot(1, 3, 3)
+    plt.pcolormesh(VY[:, :, NVX//2], VZ[:, :, NVX//2],
+                   probs[:, :, NVX//2], shading='auto')
+    plt.colorbar()
+    plt.xlabel('VY')
+    plt.ylabel('VZ')
+
+
+def main():
+    args = parse_args()
+
+    data = emout.Emout(args.directory)
+
+    # Parameters
+    NVX = 30
+    NVY = 30
+    NVZ = 30
+
+    direction = np.array([0, 0, 1])
+    direction = direction/np.linalg.norm(direction)
+
+    phase_grid = PhaseGrid(
+        x=0,
+        y=0,
+        z=0,
+        vx=(-1, 1, NVX),
+        vy=(-1, 1, NVY),
+        vz=(-1, 1, NVZ)
+    )
+    ##
+
+    # Create simulator
+    sim = create_default_simulator(data, args.ispec, args.istep)
+
+    # For self-simulation
+    # sim = create_simulator()
+
+    # Solve velocity distribution
+    pcl_prototype = ChargedParticle.create_prototype(
+        q_m=data.inp.qm[args.ispec])
+    target = VSolveTarget(sim,
+                          pcl_prototype,
+                          data.inp.dt*args.dt,
+                          phase_grid,
+                          args.maxstep,
+                          args.max_workers,
+                          args.chunksize,
+                          show_progress=True,
+                          use_mpi=args.use_mpi,
+                          )
+
+    phases, probs = target.solve()
+
+    phases = phases.reshape(NVZ, NVY, NVX, 6)
+    VX = phases[:, :, :, 3]
+    VY = phases[:, :, :, 4]
+    VZ = phases[:, :, :, 5]
+    probs = probs.reshape(NVZ, NVY, NVX)
+
+    # Calculate density [/cc].
+    density_cc_vdist = calculate_density_from_vdist(data,
+                                                    args.ispec,
+                                                    probs,
+                                                    phase_grid.dvx,
+                                                    phase_grid.dvy,
+                                                    phase_grid.dvz)
+
+    density_cc_sim = calculate_density_from_simulation(data,
+                                                       args.ispec,
+                                                       phase_grid)
+
+    print(f'Estimation: {density_cc_vdist: .5e} [/cc]')
+    print(f'Simulation: {density_cc_sim: .5e} [/cc]')
+
+    # Plot velocity distribution.
+    if args.show or args.output is not None:
+        plt.figure(figsize=(8, 3))
+
+        plot_vdist(VX, VY, VZ, probs)
+
+        if args.output is not None:
+            plt.gcf().savefig(args.output)
+        else:
+            plt.show()
+
+
+if __name__ == '__main__':
+    main()
