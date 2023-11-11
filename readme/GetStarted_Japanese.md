@@ -49,7 +49,7 @@ vdist-solverは、Pythonで粒子軌道及び任意の位相密度分布を取�
 注意: Python3.7系未満での動作はテストしていません。 もし上手く動作しなければ、pythonのバージョンをアップグレードしてください。
 
 ```
-pip install git+https://github.com/Nkzono99/vdist-solver.git
+pip install vdist-solver
 ```
 
 
@@ -134,8 +134,7 @@ def main():
     vel = np.array([0, 0, 0]) ## 粒子の設定速度
 
     # Create simulator
-    sim = create_default_simulator(data, args.ispec, args.istep,
-                                   use_si=False)
+    sim = create_default_simulator(data, args.ispec, args.istep)
     # sim = create_simulator()
 
     pcl_prototype = ChargedParticle.create_prototype(q_m=data.inp.qm[args.ispec])
@@ -263,10 +262,7 @@ def main():
     )
 
     # Create simulator
-    sim = create_default_simulator(data,
-                                   args.ispec,
-                                   args.istep,
-                                   use_si=False)
+    sim = create_default_simulator(data, args.ispec, args.istep)
 
     # For self-simulation
     # sim = create_simulator()
@@ -320,4 +316,3 @@ python vdist-solver.py -is <istep> -i <ispec> -dt <dt> -mw <max_workers> -o vdis
 <dt>: シミュレーションで用いた時間幅の何倍の時間幅を粒子トレースに用いるか。(デフォルトでは1が設定される。簡単に速度分布を見積る際やイオンなど速度の小さい粒子種の速度分布を取得する際は、ある程度大きくすると効率的に考察を進めることができる。)
 <max_workers>: プロセス並列数
 ```
-

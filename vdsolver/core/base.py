@@ -1,5 +1,6 @@
 from concurrent import futures
-from typing import Any, Callable, List, Tuple
+from copy import deepcopy
+from typing import Any, Callable, List, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -46,6 +47,7 @@ class Particle:
     def craete_clone(self, pos: np.ndarray, vel: np.ndarray):
         return Particle(pos, vel)
 
+
 class CollisionRecord:
     """Store collision information.
     """
@@ -91,9 +93,48 @@ class CollisionRecord:
             self.pcl = record.pcl
 
 
+class Prob:
+    def __init__(self, coef) -> None:
+        self.coef = coef
+
+    def __call__(self, vel: np.ndarray):
+        raise NotImplementedError()
+
+    def __mul__(self, other):
+        if isinstance(other, Prob):
+            return MulProb(self.copy(), other.copy())
+        else:  # other is int or float
+            prob_copied = self.copy()
+            prob_copied.coef *= other
+            return prob_copied
+
+    def __div__(self, other):
+        if isinstance(other, Prob):
+            raise TypeError()
+        else:  # other is int or float
+            prob_copied = self.copy()
+            prob_copied.coef /= other
+            return prob_copied
+
+    def copy(self):
+        return deepcopy(self)
+
+
+class MulProb(Prob):
+    def __init__(self, *probs, coef=1.0) -> None:
+        super().__init__(coef)
+        self.probs = probs
+
+    def __call__(self, vel: np.ndarray):
+        p = 1.0
+        for prob in self.probs:
+            p *= prob(vel)
+        return p * self.coef
+
+
 class Boundary:
     def __init__(self,
-                 prob_func: Callable[[np.ndarray], float],
+                 prob_func: Prob,
                  priority: int = -1):
         self.prob_func = prob_func
         self._priority = priority

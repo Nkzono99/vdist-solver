@@ -33,3 +33,5 @@ pip install vdist-solver
 
 A detailed description is provided below 
 - [Get Started (Japanese)](/readme/GetStarted_Japanese.md).
+- [Theory (Japanese)](/readme/Theory_Japanese.md)
+  
