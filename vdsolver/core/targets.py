@@ -147,6 +147,7 @@ class VSolveTarget(Target):
     chunksize: int
     show_progress: bool = True
     use_mpi: bool = False
+    adaptive_dt: bool = False
 
     def solve(self) -> Tuple[np.ndarray, np.ndarray]:
         phases = self.phase_grid.create_grid()
@@ -164,7 +165,8 @@ class VSolveTarget(Target):
                                    max_workers=self.max_workers,
                                    chunksize=self.chunksize,
                                    show_progress=self.show_progress,
-                                   use_mpi=self.use_mpi)
+                                   use_mpi=self.use_mpi,
+                                   adaptive_dt=self.adaptive_dt)
         probs = probs.reshape(phases.shape[:-1])
 
         return phases, probs
@@ -178,6 +180,7 @@ class BackTraceTarget(Target):
     position: List[float]
     velocity: List[float]
     maxstep: int
+    adaptive_dt: bool = False
 
     def solve(self) -> Tuple[Deque[ChargedParticle], float, ChargedParticle]:
         pos = np.array(self.position)
@@ -187,6 +190,7 @@ class BackTraceTarget(Target):
 
         pcl = self.pcl_prototype.craete_clone(pos, vel)
         prob, pcl_last = self.sim.get_prob(
-            pcl, self.dt, max_step=self.maxstep, history=history)
+            pcl, self.dt, max_step=self.maxstep, history=history, 
+            adaptive_dt=self.adaptive_dt)
 
         return history, prob, pcl_last
