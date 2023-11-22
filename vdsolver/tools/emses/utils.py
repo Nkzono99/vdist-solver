@@ -13,6 +13,8 @@ from vdsolver.core.boundaries import (CircleX, CircleY, CircleZ, CylinderX,
 from vdsolver.core.probs import MaxwellProb, NoProb
 from vdsolver.sims.essimulator import ESSimulator3d
 
+from typing import Tuple
+
 
 def create_default_simulator(
         data: emout.Emout,
@@ -338,8 +340,10 @@ def create_emmision_surface(data: emout.Emout, ispec: int, priority: int = 1) ->
         yw = ymaxe - ymine
         zw = zmaxe - zmine
 
-        path = data.inp.path[ispec]
-        func_prob = MaxwellProb((0, 0, 0), (path, path, path))
+        vbulk = bulk_velocity_emission(data, ispec, nemd)
+        vthermal = thermal_velocity_emission(data, ispec, nemd)
+        func_prob = MaxwellProb(vbulk, vthermal)
+
         if abs(nemd) == 1:
             boundary = RectangleX(pos, yw, zw,
                                   func_prob=func_prob,
@@ -357,6 +361,49 @@ def create_emmision_surface(data: emout.Emout, ispec: int, priority: int = 1) ->
             boundaries.append(boundary)
 
     return BoundaryList(boundaries)
+
+
+def bulk_velocity_emission(data, ispec, nemd):
+    vdri = rotate(data.inp.vdri[ispec],
+                  data.inp.vdthz[ispec], data.inp.vdthxy[ispec])
+
+    if 'spa' in data.inp:
+        phiz, phixy = to_phixyz(nemd)
+
+        vdri_respect_to_b0 = vector_with_paraperp(data.inp.spa[ispec],
+                                                  data.inp.spe[ispec],
+                                                  data.inp.speth[ispec],
+                                                  phiz,
+                                                  phixy)
+        return vdri + vdri_respect_to_b0
+
+    return vdri
+
+
+def thermal_velocity_emission(data: emout.Emout, ispec: int, nemd: int) -> np.ndarray:
+    para = data.inp.path[ispec]
+    perp = data.inp.peth[ispec]
+
+    phiz, phixy = to_phixyz(nemd)
+
+    return rotate([perp, perp, para], phiz, phixy)
+
+
+def to_phixyz(nemd: int) -> Tuple[int, int]:
+    if abs(nemd) == 1:
+        phiz = 90
+        phixy = 0
+    elif abs(nemd) == 2:
+        phiz = 90
+        phixy = 90
+    elif abs(nemd) == 3:
+        phiz = 0
+        phixy = 0
+
+    if nemd < 0:
+        phiz -= 180
+
+    return phiz, phixy
 
 
 def fetch_from_inp(data: emout.Emout, group: str, name: str, default=0) -> np.ndarray:
