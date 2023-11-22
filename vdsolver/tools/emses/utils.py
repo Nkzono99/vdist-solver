@@ -90,6 +90,8 @@ def create_default_simulator(
 
     boundary_list = BoundaryList(boundaries)
     boundary_list.expand()
+
+    nx, ny, nz = data.inp.nx, data.inp.ny, data.inp.nz
     sim = ESSimulator3d(nx, ny, nz, dx, ef, bf, boundary_list)
     return sim
 
@@ -111,8 +113,8 @@ def background_magnetic_field(data: emout.Emout) -> np.ndarray:
     return rotate(np.array([0., 0., b0]), data.inp.phiz, data.inp.phixy)
 
 
-def bulk_velocity(data, ispec):
-    vdri = rotate(data.inp.vdri[ispec],
+def bulk_velocity(data: emout.Emout, ispec: int) -> np.ndarray:
+    vdri = rotate(np.array([0, 0, data.inp.vdri[ispec]]),
                   data.inp.vdthz[ispec], data.inp.vdthxy[ispec])
 
     if 'spa' in data.inp:
@@ -126,7 +128,7 @@ def bulk_velocity(data, ispec):
     return vdri
 
 
-def thermal_velocity(data, ispec):
+def thermal_velocity(data: emout.Emout, ispec: int) -> np.ndarray:
     para = data.inp.path[ispec]
     perp = data.inp.peth[ispec]
     return rotate([perp, perp, para], data.inp.phiz, data.inp.phixy)
@@ -247,7 +249,7 @@ def create_innner_boundaries_from_geotypes(data: emout.Emout) -> Boundary:
     if 'npc' not in data.inp:
         return BoundaryList(boundaries)
 
-    for ipc in data.inp.npc:
+    for ipc in range(data.inp.npc):
         if data.inp.geotype[ipc] in (0, 1):
             rect = create_rectangular_boundary(data, ipc)
             boundaries.append(rect)
