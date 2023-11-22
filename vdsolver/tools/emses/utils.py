@@ -76,32 +76,10 @@ def create_default_simulator(
 
         bf = SimpleFieldVector3d(bx, by, bz)
 
-    # Velocity distribution
-    vbulk = bulk_velocity(data, ispec)
-    vthermal = thermal_velocity(data, ispec)
-
-    vdist = MaxwellProb(vbulk, vthermal)
-    noprob = NoProb()
-
-    # Boundaries
     boundaries = []
 
-    # Simulation boundary
-    nx, ny, nz = data.inp.nx, data.inp.ny, data.inp.nz
-    simbox = create_simbox(
-        xlim=(0.0, nx * dx),
-        ylim=(0.0, ny*dx),
-        zlim=(0.0, nz*dx),
-        func_prob_default=noprob,
-        func_prob_dict={
-            'zu': vdist,
-        },
-        priority_prob_dict={
-            'zu': 0,
-        },
-        use_wall=['zu', 'zl']
-    )
-    boundaries.append(simbox)
+    obs = create_external_boundaries(data, ispec, dx)
+    boundaries.append(obs)
 
     ibs = create_innner_boundaries(data)
     boundaries.append(ibs)
@@ -172,6 +150,44 @@ def vector_with_paraperp(parallel_components: float,
     vec = [perpendicular_component, 0, parallel_components]
 
     return rot.apply(vec)
+
+
+def create_external_boundaries(data: emout.Emout, ispec: int, dx: float) -> Boundary:
+    if data.inp.nflag_emit[ispec] == 2:
+        return BoundaryList([])
+
+    # Velocity distribution
+    wall_prob_dict = {}
+    vbulk = bulk_velocity(data, ispec)
+    vthermal = thermal_velocity(data, ispec)
+    vdist = MaxwellProb(vbulk, vthermal)
+
+    if data.inp.npbnd[3*ispec + 0] == 2:  # X boundary
+        wall_prob_dict['xl'] = vdist
+        wall_prob_dict['xu'] = vdist
+
+    if data.inp.npbnd[3*ispec + 1] == 2:  # Y boundary
+        wall_prob_dict['yl'] = vdist
+        wall_prob_dict['yu'] = vdist
+
+    if data.inp.npbnd[3*ispec + 2] == 2:  # Z boundary
+        if 'zssurf' not in data.inp or data.inp.zssurf < 0:
+            wall_prob_dict['zl'] = vdist
+        wall_prob_dict['zu'] = vdist
+
+    # Simulation boundary
+    nx, ny, nz = data.inp.nx, data.inp.ny, data.inp.nz
+    simbox = create_simbox(
+        xlim=(0.0, nx*dx),
+        ylim=(0.0, ny*dx),
+        zlim=(0.0, nz*dx),
+        func_prob_default=NoProb(),
+        func_prob_dict=wall_prob_dict,
+        priority_prob_dict={key: 0. for key in wall_prob_dict},
+        use_wall=wall_prob_dict.keys()
+    )
+
+    return simbox
 
 
 def create_innner_boundaries(data: emout.Emout) -> Boundary:
@@ -314,6 +330,7 @@ def create_sphere_boundary(data: emout.Emout, ipc: int) -> Boundary:
 
 
 def create_emmision_surface(data: emout.Emout, ispec: int, priority: int = 1) -> Boundary:
+    # Settings using 'nepl'.
     if 'nepl' not in data.inp:
         return BoundaryList([])
 
