@@ -4,6 +4,7 @@ from typing import Callable, Dict, List, Tuple
 import numpy as np
 
 from .base import Boundary, BoundaryList, CollisionRecord, Particle
+from vdsolver.core.probs import NoProb
 
 
 class Plane2d(Boundary):
@@ -181,13 +182,16 @@ def create_simbox(xlim: Tuple[float, float],
 def create_box(xlim: Tuple[float, float],
                ylim: Tuple[float, float],
                zlim: Tuple[float, float],
-               func_prob_default: Callable[[np.ndarray], float],
-               func_prob_dict: Dict[str, Callable[[np.ndarray], float]],
-               priority_prob_dict: Dict[str, int],
+               func_prob_default: Callable[[np.ndarray], float]=None,
+               func_prob_dict: Dict[str, Callable[[np.ndarray], float]]={},
+               priority_prob_dict: Dict[str, int]={},
                use_wall: List[str] = 'all',
                ) -> BoundaryList:
     if use_wall == 'all':
         use_wall = ['xl', 'xu', 'yl', 'yu', 'zl', 'zu']
+
+    if func_prob_default is None:
+        func_prob_default = NoProb()
 
     fpdict = defaultdict(lambda: func_prob_default)
     ppdict = defaultdict(lambda: 1)

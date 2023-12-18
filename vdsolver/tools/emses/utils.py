@@ -277,7 +277,6 @@ def create_rectangular_boundary(data: emout.Emout, ipc: int) -> Boundary:
         (xlpc[ipc], xupc[ipc]),
         (ylpc[ipc], yupc[ipc]),
         (zlpc[ipc], zupc[ipc]),
-        func_prob_default=NoProb(),
         use_wall='all',
     )
 
