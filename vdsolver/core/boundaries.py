@@ -157,16 +157,16 @@ def create_simbox(xlim: Tuple[float, float],
 
     boundaries = []
     if 'xl' in use_wall:
-        xl = PlaneXY(xlim[0], fpdict['xl'], priority=ppdict['xl'])
+        xl = PlaneYZ(xlim[0], fpdict['xl'], priority=ppdict['xl'])
         boundaries.append(xl)
     if 'xu' in use_wall:
-        xu = PlaneXY(xlim[1], fpdict['xu'], priority=ppdict['xu'])
+        xu = PlaneYZ(xlim[1], fpdict['xu'], priority=ppdict['xu'])
         boundaries.append(xu)
     if 'yl' in use_wall:
-        yl = PlaneXY(ylim[0], fpdict['yl'], priority=ppdict['yl'])
+        yl = PlaneZX(ylim[0], fpdict['yl'], priority=ppdict['yl'])
         boundaries.append(yl)
     if 'yu' in use_wall:
-        yu = PlaneXY(ylim[1], fpdict['yu'], priority=ppdict['yu'])
+        yu = PlaneZX(ylim[1], fpdict['yu'], priority=ppdict['yu'])
         boundaries.append(yu)
     if 'zl' in use_wall:
         zl = PlaneXY(zlim[0], fpdict['zl'], priority=ppdict['zl'])
