@@ -66,9 +66,9 @@ def create_default_simulator(
     except Exception:
         # If magnetic field data is not available and cannot be loaded,
         # the magnetic field is calculated as 0.
-        bx_data = np.zeros_like(ex)
-        by_data = np.zeros_like(ey)
-        bz_data = np.zeros_like(ez)
+        bx_data = np.zeros_like(ex_data)
+        by_data = np.zeros_like(ey_data)
+        bz_data = np.zeros_like(ez_data)
 
         bx = FieldScalar(bx_data+b0x, dx, offsets=(0.0, 0.5*dx, 0.5*dx))
         by = FieldScalar(by_data+b0y, dx, offsets=(0.5*dx, 0.0, 0.5*dx))
