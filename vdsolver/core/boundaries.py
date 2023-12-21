@@ -437,6 +437,8 @@ class Sphere(Boundary):
         d2 = b*b - a*c
         if d2 < 0:
             return None
+        
+        d = np.sqrt(d2)
 
         # Determine if the intersection occurred in time.
         r = (-b - d)/a
