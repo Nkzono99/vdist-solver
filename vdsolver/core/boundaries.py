@@ -269,6 +269,9 @@ class ParallelCylinder(Boundary):
         b = xr*dx + yr*dy
         c = xr*xr + yr*yr - self.radius*self.radius
 
+        if a == 0:
+            return None
+
         d2 = b*b - a*c
         if d2 < 0:
             return None
@@ -353,6 +356,9 @@ class ParallelCircle(Boundary):
         distance = self.origin[axis0] - pcl.pos[axis0]
         direction = pcl_next.pos[axis0] - pcl.pos[axis0]
 
+        if direction == 0:
+            return None
+
         r = distance / direction
 
         if r < 0 or 1 < r:
@@ -424,6 +430,9 @@ class Sphere(Boundary):
         a = np.sum(q1*q1 + q2*q2) - 2*np.sum(q1*q2)
         b = np.sum(q1*q2) - np.sum(q1*q1)
         c = np.sum(q1*q1) - self.radius*self.radius
+
+        if a == 0:
+            return None
 
         d2 = b*b - a*c
         if d2 < 0:
