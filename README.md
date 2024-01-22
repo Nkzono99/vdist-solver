@@ -1,4 +1,7 @@
 # vdist-solver
+
+[![DOI](https://zenodo.org/badge/373884481.svg)](https://zenodo.org/badge/latestdoi/373884481)
+
 Velocity distribution function solver using Liouville's theorem
 
 |vx-vz distribution|vz distribution|backtrace|
