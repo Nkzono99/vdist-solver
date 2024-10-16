@@ -126,6 +126,25 @@ class PhaseGrid:
         grd[:, :, :, :, :, :, 5] = VZ
 
         return grd
+    
+    def create_particles(self) -> List[Particle]:
+        """Create a list of particles.
+
+        Returns
+        -------
+        List[Particle]
+            list of particles
+        """
+        phases = self.create_grid()
+        particles = []
+
+        for phase in phases.reshape(-1, phases.shape[-1]):
+            pos = phase[:3].copy()
+            vel = phase[3:].copy()
+            pcl = Particle(pos, vel)
+            particles.append(pcl)
+
+        return particles
 
 
 @dataclass
